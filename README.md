@@ -2,6 +2,13 @@
 
 A toolbox for management of meteorological and marine data on limited information regions.
 
+* German Rivillas-Ospina
+* Marianella Bolivar
+* Mauro Maza Chamorro
+* Gabriel Ruiz
+* Diego Casas
+* Roberto Guerrero
+
 This application is composed of two main modules: the first module allows the downloading of
 information from the database (NOAA - WW3); the second module uses the principles of statistical
 mathematics for the treatment of waves and wind. The importance of this simple application is
