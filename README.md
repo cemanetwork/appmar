@@ -28,7 +28,7 @@ of Colombia where meteorological and marine information are scarce.
 Most dependencies of APPMAR 1.0 can be downloaded via the Conda package manager. We recommend to install the dependencies in a fresh environment:
 
 ```
-conda create -c conda-forge -n appmarenv wxpython matplotlib scipy numpy windrose cartopy xarray gdal
+conda create -c conda-forge -n appmarenv wxpython matplotlib scipy numpy windrose cartopy xarray gdal cfgrib
 ```
 
 The only dependency you have to install from PIP is `weibull`:
