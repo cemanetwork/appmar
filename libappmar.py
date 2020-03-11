@@ -291,9 +291,9 @@ def load_max(par_id):
             done[y] = [xarr]
     maxima = []
     for y in done:
-        maximum = np.nan
+        maximum = xr.full_like(done[y][0], np.nan)
         for arr in done[y]:
-            maximum = np.fmax(maximum, arr)
+            maximum = np.fmax(maximum.values, arr)
         maxima.append(maximum)
     return maxima
 
