@@ -238,11 +238,12 @@ def gen_dataset_from_raster(fname, lon, lat, time):
     for i in range(1, ds.RasterCount + 1, 2):
         band_u = ds.GetRasterBand(i)
         band_v = ds.GetRasterBand(i + 1)
-        nodata = band_u.GetNoDataValue()
-        arr_u = np.ma.masked_equal(band_u.ReadAsArray(), nodata)
-        arr_v = np.ma.masked_equal(band_v.ReadAsArray(), nodata)
+        nodata_u = band_u.GetNoDataValue()
+        nodata_v = band_v.GetNoDataValue()
+        arr_u = np.ma.masked_equal(band_u.ReadAsArray(), nodata_u)
+        arr_v = np.ma.masked_equal(band_v.ReadAsArray(), nodata_v)
         wind.append((arr_u**2 + arr_v**2)**0.5)
-    ds = xr.DataArray(wind, coords=[time, lat, lon], dims=["time", "latitude", "longitude"])
+    ds = xr.DataArray(np.ma.stack(wind), coords=[time, lat, lon], dims=["time", "latitude", "longitude"])
     return ds
 
 
