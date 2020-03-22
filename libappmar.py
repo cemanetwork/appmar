@@ -179,7 +179,10 @@ def joint_distribution(par_ids, months, lon, lat):
     for k in done1:
         xall[0].extend(done1[k])
         xall[1].extend(done2[k])
-    return np.array(xall)
+    if len(xall[0]) != len(xall[1]):
+        raise Exception("Missing or corrupt files: Check the data directory for corrupt files and download again.")
+    xall = np.array(xall)
+    return xall[:, ~np.isnan(xall.sum(axis=0))]
 
 
 def load_data(par_ids, months, lon, lat):
