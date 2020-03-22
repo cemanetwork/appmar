@@ -364,7 +364,7 @@ class FrameAnalysisShortTerm(wx.Frame):
         season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall"])
         if season:
             ms = MONTHS[season]
-            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.11")
+            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
             str_lon, str_lat = str_coords.split(",")
             lon = float(str_lon)
             lat = float(str_lat)
@@ -394,7 +394,7 @@ class FrameAnalysisShortTerm(wx.Frame):
         season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall"])
         if season:
             ms = MONTHS[season]
-            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.11")
+            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
             str_lon, str_lat = str_coords.split(",")
             lon = float(str_lon)
             lat = float(str_lat)
@@ -424,7 +424,7 @@ class FrameAnalysisShortTerm(wx.Frame):
         season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall"])
         if season:
             ms = MONTHS[season]
-            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.11")
+            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
             str_lon, str_lat = str_coords.split(",")
             lon = float(str_lon)
             lat = float(str_lat)
@@ -467,7 +467,7 @@ class FrameAnalysisShortTerm(wx.Frame):
         season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall"])
         if season:
             ms = MONTHS[season]
-            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.11")
+            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
             str_lon, str_lat = str_coords.split(",")
             lon = float(str_lon)
             lat = float(str_lat)
@@ -543,7 +543,7 @@ class FrameAnalysisLongTermStorm(wx.Frame):
     def on_energetic(self, event):
         """To DO"""
         ms = MONTHS["All"]
-        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.11")
+        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
         str_lon, str_lat = str_coords.split(",")
         lon = float(str_lon)
         lat = float(str_lat)
@@ -590,7 +590,7 @@ class FrameAnalysisLongTermStorm(wx.Frame):
     def on_storms_annual(self, event):
         """Analysis of storms ocurrences"""
         ms = MONTHS["All"]
-        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.11")
+        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
         str_lon, str_lat = str_coords.split(",")
         lon = float(str_lon)
         lat = float(str_lat)
@@ -636,7 +636,7 @@ class FrameAnalysisLongTermStorm(wx.Frame):
     def on_storms_monthly(self, event):
         """TO DO"""
         ms = MONTHS["All"]
-        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.11")
+        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
         str_lon, str_lat = str_coords.split(",")
         lon = float(str_lon)
         lat = float(str_lat)
@@ -682,7 +682,7 @@ class FrameAnalysisLongTermStorm(wx.Frame):
     def on_energies_annual(self, event):
         """Analysis of storms ocurrences"""
         ms = MONTHS["All"]
-        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.11")
+        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
         str_lon, str_lat = str_coords.split(",")
         lon = float(str_lon)
         lat = float(str_lat)
@@ -728,7 +728,7 @@ class FrameAnalysisLongTermStorm(wx.Frame):
     def on_energies_monthly(self, event):
         """TO DO"""
         ms = MONTHS["All"]
-        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.11")
+        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
         str_lon, str_lat = str_coords.split(",")
         lon = float(str_lon)
         lat = float(str_lat)
@@ -964,7 +964,7 @@ class FrameAnalysisLongTerm(wx.Frame):
         season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall"])
         if season:
             ms = MONTHS[season]
-            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.11")
+            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
             str_lon, str_lat = str_coords.split(",")
             lon = float(str_lon)
             lat = float(str_lat)
