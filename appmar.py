@@ -558,21 +558,21 @@ class FrameAnalysisLongTermStorm(wx.Frame):
             data = load_data(["dp", "hs", "tp"], ms, lon, lat)
             save_obj(data, fname)
         progress_dlg.Update(100)
-        dp = []
-        hs = []
-        tp = []
+        dp_ = []
+        hs_ = []
+        tp_ = []
         for k in data["dp"]:
-            dp += data["dp"][k]
-            hs += data["hs"][k]
-            tp += data["tp"][k]
-        dp = np.array(dp)
-        hs = np.array(hs)
-        tp = np.array(tp)
-        p97_hs = np.percentile(hs, 97)
-        i = hs >= p97_hs
-        hs = hs[i]
-        tp = tp[i]
-        dp = dp[i]
+            dp_ += data["dp"][k]
+            hs_ += data["hs"][k]
+            tp_ += data["tp"][k]
+        dp_ = np.array(dp_)
+        hs_ = np.array(hs_)
+        tp_ = np.array(tp_)
+        p97_hs = np.percentile(hs_, 97)
+        i = hs_ >= p97_hs
+        hs = hs_[i]
+        tp = tp_[i]
+        dp = dp_[i]
         frm_canvas = FrameCanvas(None, title="Energetic Analysis")
         frm_canvas.fig.suptitle("Energetic Analysis")
         ax1 = frm_canvas.fig.add_subplot(1, 2, 1, projection="windrose")
