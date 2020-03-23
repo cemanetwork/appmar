@@ -29,6 +29,11 @@ LAND_10M = cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor="k"
 N = 181
 
 matplotlib.rcParams["font.family"] = "Times New Roman"
+matplotlib.rcParams["font.size"] = 10
+matplotlib.rcParams['mathtext.fontset'] = "custom"
+matplotlib.rcParams['mathtext.rm'] = "Times New Roman"
+matplotlib.rcParams['mathtext.it'] = "Times New Roman:italic"
+matplotlib.rcParams['mathtext.bf'] = "Times New Roman:bold"
 
 MONTHS = {
     "Winter": [12, 1, 2],
@@ -41,18 +46,18 @@ MONTHS = {
 STR_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 class FrameCanvas(wx.Frame):
-    def __init__(self, *args, **kw):
+    def __init__(self, figsize=(6.5, 4), *args, **kw):
         super(FrameCanvas, self).__init__(*args, **kw)
 
-        self.fig = Figure()
+        self.fig = Figure(figsize=figsize)
         self.canvas = FigureCanvas(self, -1, self.fig)
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.canvas, 1, wx.LEFT | wx.TOP | wx.EXPAND)
         self.SetSizer(self.sizer)
-        self.Fit()
 
         self.add_toolbar()  # comment this out for no toolbar
+        self.Fit()
 
     def add_toolbar(self):
         self.toolbar = NavigationToolbar(self.canvas)
@@ -380,7 +385,7 @@ class FrameAnalysisShortTerm(wx.Frame):
                 save_obj(data, fname)
                 x, p = data
             progress_dlg.Update(100)
-            frm_canvas = FrameCanvas(None, title="Probability of Exceedance for Significant Wave Height")
+            frm_canvas = FrameCanvas(parent=None, title="Probability of Exceedance for Significant Wave Height")
             ax = frm_canvas.fig.add_subplot()
             ax.semilogy(x, p, "o")
             ax.set_xlabel("Significant Wave Height (m)")
@@ -410,7 +415,7 @@ class FrameAnalysisShortTerm(wx.Frame):
                 save_obj(data, fname)
                 x, p = data
             progress_dlg.Update(100)
-            frm_canvas = FrameCanvas(None, title="Probability of Exceedance for Peak Period")
+            frm_canvas = FrameCanvas(parent=None, title="Probability of Exceedance for Peak Period")
             ax = frm_canvas.fig.add_subplot()
             ax.semilogy(x, p, "o")
             ax.set_xlabel("Peak Period (s)")
@@ -439,7 +444,7 @@ class FrameAnalysisShortTerm(wx.Frame):
                 dp_hs  = joint_distribution(["dp", "hs"], ms, lon, lat)
                 save_obj(dp_hs, fname)
             progress_dlg.Update(100)
-            frm_canvas = FrameCanvas(None, title="Joint Probability of Hs - θ")
+            frm_canvas = FrameCanvas(parent=None, title="Joint Probability of Hs - θ")
             ax = frm_canvas.fig.add_subplot()
             kernel = stats.gaussian_kde(dp_hs)
             dp, hs = dp_hs
@@ -452,9 +457,9 @@ class FrameAnalysisShortTerm(wx.Frame):
                 (N//2, N)
             )
             upper = matplotlib.cm.jet(np.arange(256))
-            lower = np.ones((int(256/4),4))
+            lower = np.ones((int(256/4), 4))
             for i in range(3):
-                lower[:,i] = np.linspace(1, upper[0,i], lower.shape[0])
+                lower[:, i] = np.linspace(1, upper[0, i], lower.shape[0])
             cmap = np.vstack((lower, upper))
             cmap = matplotlib.colors.ListedColormap(cmap, name='myColorMap', N=cmap.shape[0])
             im = ax.imshow(p, origin="lower", extent=(0, 360, hs.min(), hs.max()), aspect="auto", cmap=cmap)
@@ -488,11 +493,11 @@ class FrameAnalysisShortTerm(wx.Frame):
                 dp_hs  = joint_distribution(["dp", "hs"], ms, lon, lat)
                 save_obj(dp_hs, fname)
             progress_dlg.Update(100)
-            frm_canvas = FrameCanvas(None, title="Wave Rose")
+            frm_canvas = FrameCanvas(parent=None, title="Wave Rose")
             ax = frm_canvas.fig.add_subplot(projection="windrose")
             dp, hs = dp_hs
             ax.bar(dp, hs, normed=True)
-            ax.set_title("Significant Wave Height Rose")
+            ax.set_title("Significant Wave Height - " + season, pad=20)
             ax.set_legend(title="$H_s$ (m)")
             frm_canvas.Show()
 
@@ -564,31 +569,36 @@ class FrameAnalysisLongTermStorm(wx.Frame):
             data = load_data(["dp", "hs", "tp"], ms, lon, lat)
             save_obj(data, fname)
         progress_dlg.Update(100)
-        dp_ = []
-        hs_ = []
-        tp_ = []
+        dp = []
+        hs = []
+        tp = []
         for k in data["dp"]:
-            dp_ += data["dp"][k]
-            hs_ += data["hs"][k]
-            tp_ += data["tp"][k]
-        dp_ = np.array(dp_)
-        hs_ = np.array(hs_)
-        tp_ = np.array(tp_)
-        p97_hs = np.percentile(hs_, 97)
-        i = hs_ >= p97_hs
-        hs = hs_[i]
-        tp = tp_[i]
-        dp = dp_[i]
-        frm_canvas = FrameCanvas(None, title="Energetic Analysis")
-        frm_canvas.fig.suptitle("Energetic Analysis")
+            dp += data["dp"][k]
+            hs += data["hs"][k]
+            tp += data["tp"][k]
+        dp = np.array(dp)
+        hs = np.array(hs)
+        tp = np.array(tp)
+        if not (len(dp) == len(hs) == len(tp)):
+            raise Exception("Missing or corrupt files: Check the data directory for corrupt files and download again.")
+        p97_hs = np.percentile(hs, 97)
+        i = hs >= p97_hs
+        hs = hs[i]
+        tp = tp[i]
+        dp = dp[i]
+        notnan = ~np.isnan(hs + tp + dp)
+        hs = hs[notnan]
+        tp = tp[notnan]
+        dp = dp[notnan]
+        frm_canvas = FrameCanvas(figsize=(9, 4.5), parent=None, title="Energetic Analysis")        
         ax1 = frm_canvas.fig.add_subplot(1, 2, 1, projection="windrose")
         ax1.bar(dp, tp, normed=True)
-        ax1.set_title("Wave period rose calculated energetically by storm")
+        ax1.set_title("Wave period rose calculated energetically by storm", pad=20)
         ax1.set_legend(title="$T_p$ (s)")
         ax2 = frm_canvas.fig.add_subplot(1, 2, 2, projection="windrose")
         en = hs/p97_hs
         ax2.bar(dp, en, normed=True)
-        ax2.set_title("Significant wave height rose calculated energetically by storm")
+        ax2.set_title("Significant wave height rose calculated energetically by storm", pad=20)
         ax2.set_legend(title="$E$ (-)")
         frm_canvas.Show()
         
@@ -626,16 +636,17 @@ class FrameAnalysisLongTermStorm(wx.Frame):
         for y in ys:
             n_events_97.append(sum(x > p97_hs for x in hs[y]))
             n_events_99.append(sum(x > p99_hs for x in hs[y]))
-        frm_canvas = FrameCanvas(None, title="Mean and maximum annual number of storms")
+        frm_canvas = FrameCanvas(parent=None, title="Mean and maximum annual number of storms")
         x = np.arange(len(ys))
-        frm_canvas.fig.suptitle("Mean and maximum annual number of storms")
         ax1 = frm_canvas.fig.add_subplot(2, 1, 1)
         ax1.bar(x, n_events_97, tick_label=[*map(str, ys)])
-        ax1.set_title("$H_s > H_{s,97}$")
+        ax1.set_title("$H_s > H_{s,97} = " + f"{p97_hs:.2f}$ m")
+        ax1.tick_params(axis="x", labelrotation=90)
         ax1.grid(True)
         ax2 = frm_canvas.fig.add_subplot(2, 1, 2)
         ax2.bar(x, n_events_99, tick_label=[*map(str, ys)])
-        ax2.set_title("$H_s > H_{s,99}$")
+        ax2.set_title("$H_s > H_{s,99} = " + f"{p99_hs:.2f}$ m")
+        ax2.tick_params(axis="x", labelrotation=90)
         ax2.grid(True)
         frm_canvas.Show()
 
@@ -671,16 +682,15 @@ class FrameAnalysisLongTermStorm(wx.Frame):
         for m in ms:
             n_events_97.append(sum(x > p97_hs for x in hs[m]))
             n_events_99.append(sum(x > p99_hs for x in hs[m]))
-        frm_canvas = FrameCanvas(None, title="Monthly mean and maximum number of storms")
+        frm_canvas = FrameCanvas(parent=None, title="Monthly mean and maximum number of storms")
         x = np.arange(12)
-        frm_canvas.fig.suptitle("Monthly mean and maximum number of storms")
         ax1 = frm_canvas.fig.add_subplot(2, 1, 1)
         ax1.bar(x, n_events_97, tick_label=STR_MONTHS)
         ax1.grid(True)
-        ax1.set_title("$H_s > H_{s,97}$")
+        ax1.set_title("$H_s > H_{s,97} = " + f"{p97_hs:.2f}$ m")
         ax2 = frm_canvas.fig.add_subplot(2, 1, 2)
         ax2.bar(x, n_events_99, tick_label=STR_MONTHS)
-        ax2.set_title("$H_s > H_{s,99}$")
+        ax2.set_title("$H_s > H_{s,99} = " + f"{p99_hs:.2f}$ m")
         ax2.grid(True)
         frm_canvas.Show()
 
@@ -718,16 +728,17 @@ class FrameAnalysisLongTermStorm(wx.Frame):
         for y in ys:
             n_events_97.append(sum(h/p97_hs > 1 for h in hs[y]))
             n_events_99.append(sum(h/p97_hs > p99_hs/p97_hs for h in hs[y]))
-        frm_canvas = FrameCanvas(None, title="Mean and maximum annual number of storms with normalized energy")
+        frm_canvas = FrameCanvas(parent=None, title="Mean and maximum annual number of storms with normalized energy")
         x = np.arange(len(ys))
-        frm_canvas.fig.suptitle("Mean and maximum annual number of storms with normalized energy")
         ax1 = frm_canvas.fig.add_subplot(2, 1, 1)
         ax1.bar(x, n_events_97, tick_label=[*map(str, ys)])
         ax1.set_title("$E > 1$")
+        ax1.tick_params(axis="x", labelrotation=90)
         ax1.grid(True)
         ax2 = frm_canvas.fig.add_subplot(2, 1, 2)
         ax2.bar(x, n_events_99, tick_label=[*map(str, ys)])
-        ax2.set_title(f"$E > {p99_hs/p97_hs:3.1f}$")
+        ax2.set_title(f"$E > {p99_hs/p97_hs:.2f}$")
+        ax2.tick_params(axis="x", labelrotation=90)
         ax2.grid(True)
         frm_canvas.Show()
 
@@ -763,16 +774,15 @@ class FrameAnalysisLongTermStorm(wx.Frame):
         for m in ms:
             n_events_97.append(sum(h/p97_hs > 1 for h in hs[m]))
             n_events_99.append(sum(h/p97_hs > p99_hs/p97_hs for h in hs[m]))
-        frm_canvas = FrameCanvas(None, title="Monthly mean and maximum number of storms with normalized energy")
+        frm_canvas = FrameCanvas(parent=None, title="Monthly mean and maximum number of storms with normalized energy")
         x = np.arange(12)
-        frm_canvas.fig.suptitle("Monthly mean and maximum number of storms with normalized energy")
         ax1 = frm_canvas.fig.add_subplot(2, 1, 1)
         ax1.bar(x, n_events_97, tick_label=STR_MONTHS)
         ax1.grid(True)
         ax1.set_title("$E > 1$")
         ax2 = frm_canvas.fig.add_subplot(2, 1, 2)
         ax2.bar(x, n_events_99, tick_label=STR_MONTHS)
-        ax2.set_title(f"$E > {p99_hs/p97_hs:3.1f}$")
+        ax2.set_title(f"$E > {p99_hs/p97_hs:.2f}$")
         ax2.grid(True)
         frm_canvas.Show()
 
