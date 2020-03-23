@@ -451,7 +451,13 @@ class FrameAnalysisShortTerm(wx.Frame):
                 kernel(np.vstack([dp.flatten(), hs.flatten()])),
                 (N//2, N)
             )
-            im = ax.imshow(p, origin="lower", extent=(0, 360, hs.min(), hs.max()), aspect="auto", cmap="jet")
+            upper = matplotlib.cm.jet(np.arange(256))
+            lower = np.ones((int(256/4),4))
+            for i in range(3):
+                lower[:,i] = np.linspace(1, upper[0,i], lower.shape[0])
+            cmap = np.vstack((lower, upper))
+            cmap = matplotlib.colors.ListedColormap(cmap, name='myColorMap', N=cmap.shape[0])
+            im = ax.imshow(p, origin="lower", extent=(0, 360, hs.min(), hs.max()), aspect="auto", cmap=cmap)
             cbar = frm_canvas.fig.colorbar(im)
             cbar.ax.set_ylabel("Probability")
             cs = ax.contour(dp, hs, p, colors="k", levels=4, linewidths=1)
