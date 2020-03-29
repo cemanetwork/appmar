@@ -23,41 +23,54 @@ for decision making and forcing of the mathematical models that are part of the 
 of coastal, oceanic and offshore engineering. This application has been tested in the Caribbean area
 of Colombia where meteorological and marine information are scarce.
 
-## Dependencies
+## Installation
 
 APPMAR is written in Python 3, and it requires a variety of dependencies to run. We strongly recommend using the Conda package manager to install Python 3 and APPMAR dependencies. You can obtain Conda by installing [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [Anaconda](https://www.anaconda.com/).
 
 **Note:** APPMAR has been tested only in Python 3.8.2 on Windows 10 with dependencies installed from the conda-forge repository. If you find problems trying to run APPMAR on a different platform o Python version, please open an issue.
 
-In order to install APPMAR dependencies, open Anaconda Prompt (or any terminal with the conda command in its PATH environment variable) and execute the following command to create a new Conda environment called `appmarenv` and install only Python and APPMAR dependencies on it:
+In order to install and run APPMAR, follow these steps:
+
+1. Download and extract APPMAR source code.
+
+2. Open Anaconda Prompt (or any terminal with the conda command in its PATH environment variable).
+
+3. From the command line, navigate to the APPMAR directory (e.g. `C:\Users\user\Desktop\appmar`). Use `cd` or any command available in your OS for the purpose of changing the current directory:
 
 ```
-conda create -y -c conda-forge -n appmarenv python=3 wxpython matplotlib scipy numpy windrose cartopy xarray gdal cfgrib
+cd C:\Users\user\Desktop\appmar
 ```
 
-Then you can activate the recently created environment by executing:
+4. Use the following command to create a new Conda environment called `appmarenv` and install dependencies from `package-list.txt`:
+
+```
+conda create -y --name appmarenv --file package-list.txt
+```
+
+5. Activate the recently created environment:
 
 ```
 conda activate appmarenv
 ```
 
-The last step is to install the `weibull` package. This package is not available on the Anaconda repository or conda-forge, but it can be downloaded from PyPI using pip, the Python package installer:
+6. Now you can start APPMAR by executing:
 
 ```
-pip install weibull
-```
-
-Keep in mind that the previous installation steps are only required for the first time you run APPMAR.
-## Run
-
-After installing dependencies, you can run APPMAR 1.0 by navigating to its directory and executing `appmar.py` from a command line with an active Conda environment (the same environment in which you installed the dependencies):
-
-```
-cd path/to/appmar/directory
-conda activate appmarenv
 python appmar.py
 ```
 
+# Run
+
+The next time you want to use APPMAR, only follow steps 2, 3, 5 and 6.
+
 ## Use
 
-First, download data of the grid IDs and year range you want. If you want to download data from both single-grid (Jul 1999 - Nov 2007) and multi-grid (Feb 2005 - present) datasets, you must provide IDs of equivalent grids separated by comma without space (e.g. `wna,at_10m`). GRIB files are downloaded into the `data` subdirectory. The download process usually takes a long time because NOAA's FTP server provides slow download speeds. Once the download is completed, you can navigate to the analysis module and generate short-term and long-term statistical plots. The first time you generate a plot, APPMAR 1.0 caches processed data into the `tmp` subdirectory in order to speed up future plot generation from the same grid/year range. If you want to generate fresh plots, delete the `tmp` subdirectory. Also, if you have problems with APPMAR 1.0 not identifying a new grid ID, delete the `data` subdirectory and download the GRIB files again.
+First, download data of the grid IDs and year range you want. If you want to download data from both single-grid (Jul 1999 - Nov 2007) and multi-grid (Feb 2005 - present) datasets, you must provide IDs of equivalent grids separated by comma without space (e.g. `wna,at_10m`). GRIB files are downloaded into the `data` subdirectory. The download process usually takes a long time because NOAA's FTP server provides slow download speeds.
+
+Once the download is completed, you can navigate to the analysis module and generate short-term and long-term statistical plots. The first time you generate a plot, APPMAR 1.0 caches processed data into the `tmp` subdirectory in order to speed up future plot generation from the same grid/year range.
+
+If you want to generate fresh plots, delete the `tmp` subdirectory. Also, if you have problems with APPMAR 1.0 not identifying a new grid ID, delete the `data` subdirectory and download the GRIB files again.
+
+## Update
+
+When an update is available, download the the new source code and replace the `appmar.py` and `libappmar.py` files. Delete the `tmp` and `__pycache__` directories for changes to take effect.
