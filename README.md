@@ -32,7 +32,7 @@ APPMAR is written in Python 3, and it requires a variety of dependencies to run.
 In order to install APPMAR dependencies, open Anaconda Prompt (or any terminal with the conda command in its PATH environment variable) and execute the following command to create a new Conda environment called `appmarenv` and install only Python and APPMAR dependencies on it:
 
 ```
-conda create -y -c conda-forge -n python=3 appmarenv wxpython matplotlib scipy numpy windrose cartopy xarray gdal cfgrib
+conda create -y -c conda-forge -n appmarenv python=3 wxpython matplotlib scipy numpy windrose cartopy xarray gdal cfgrib
 ```
 
 Then you can activate the recently created environment by executing:
