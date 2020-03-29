@@ -59,7 +59,7 @@ conda activate appmarenv
 python appmar.py
 ```
 
-# Run
+## Run
 
 The next time you want to use APPMAR, only follow steps 2, 3, 5 and 6.
 
