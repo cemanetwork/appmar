@@ -25,19 +25,29 @@ of Colombia where meteorological and marine information are scarce.
 
 ## Dependencies
 
-Most dependencies of APPMAR 1.0 can be downloaded via the Conda package manager. We recommend to install the dependencies in a fresh environment:
+APPMAR is written in Python 3, and it requires a variety of dependencies to run. We strongly recommend using the Conda package manager to install Python 3 and APPMAR dependencies. You can obtain Conda by installing [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [Anaconda](https://www.anaconda.com/).
+
+**Note:** APPMAR has been tested only in Python 3.8.2 on Windows 10 with dependencies installed from the conda-forge repository. If you find problems trying to run APPMAR on a different platform o Python version, please open an issue.
+
+In order to install APPMAR dependencies, open Anaconda Prompt (or any terminal with the conda command in its PATH environment variable) and execute the following command to create a new Conda environment called `appmarenv` and install only Python and APPMAR dependencies on it:
 
 ```
-conda create -c conda-forge -n appmarenv wxpython matplotlib scipy numpy windrose cartopy xarray gdal cfgrib
+conda create -y -c conda-forge -n python=3 appmarenv wxpython matplotlib scipy numpy windrose cartopy xarray gdal cfgrib
 ```
 
-The only dependency you have to install from PIP is `weibull`:
+Then you can activate the recently created environment by executing:
 
 ```
 conda activate appmarenv
+```
+
+The last step is to install the `weibull` package. This package is not available on the Anaconda repository or conda-forge, but it can be downloaded from PyPI using pip, the Python package installer:
+
+```
 pip install weibull
 ```
 
+Keep in mind that the previous installation steps are only required for the first time you run APPMAR.
 ## Run
 
 After installing dependencies, you can run APPMAR 1.0 by navigating to its directory and executing `appmar.py` from a command line with an active Conda environment (the same environment in which you installed the dependencies):
