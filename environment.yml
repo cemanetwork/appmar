@@ -1,0 +1,18 @@
+name: appmarenv
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - cfgrib
+  - python=3.7
+  - windrose
+  - gdal
+  - wxpython
+  - numpy
+  - matplotlib
+  - scipy
+  - xarray
+  - cartopy
+  - pip
+  - pip:
+    - weibull

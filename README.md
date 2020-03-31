@@ -25,9 +25,9 @@ of Colombia where meteorological and marine information are scarce.
 
 ## Installation
 
-APPMAR is written in Python 3, and it requires a variety of dependencies to run. We strongly recommend using the Conda package manager to install Python 3 and APPMAR dependencies. You can obtain Conda by installing [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [Anaconda](https://www.anaconda.com/).
+APPMAR is written in Python 3.7, and it requires a variety of dependencies to run. We strongly recommend using the Conda package manager to install Python 3.7 and APPMAR dependencies. You can obtain Conda by installing [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [Anaconda](https://www.anaconda.com/).
 
-**Note:** APPMAR has been tested only in Python 3.8.2 on Windows 10 with dependencies installed from the conda-forge repository. If you find problems trying to run APPMAR on a different platform o Python version, please open an issue.
+**Note:** APPMAR has been tested only in Python >=3.7 on Windows 10 with dependencies installed via conda. If you find problems trying to run APPMAR on a different platform o Python version, please open an issue.
 
 In order to install and run APPMAR, follow these steps:
 
@@ -41,10 +41,10 @@ In order to install and run APPMAR, follow these steps:
 cd C:\Users\user\Desktop\appmar
 ```
 
-4. Use the following command to create a new Conda environment called `appmarenv` and install dependencies from `package-list.txt`:
+4. Use the following command to create a new Conda environment called `appmarenv` with Python 3.7 and APPMAR dependencies:
 
 ```
-conda create -y --name appmarenv --file package-list.txt
+conda env create -f environment.yml
 ```
 
 5. Activate the recently created environment:
@@ -73,4 +73,4 @@ If you want to generate fresh plots, delete the `tmp` subdirectory. Also, if you
 
 ## Update
 
-When an update is available, download the the new source code and replace the `appmar.py` and `libappmar.py` files. Delete the `tmp` and `__pycache__` directories for changes to take effect.
+When an update is available, download the the new source code and replace the `appmar.py` and `libappmar.py` files. Delete the `tmp` and `__pycache__` directories for changes to take effect the next time you start APPMAR.
