@@ -99,11 +99,11 @@ def download_data(grid_ids, par_ids, years, months):
                 if gid not in grid_ids or pid not in par_ids:
                     logging.debug("%s is not a requested grid/parameter", fn)
                     continue
-                try:
-                    with open(f"data/{fn}", "xb") as f:
+                if os.path.getsize(f"data/{fn}") != ftp.size(fn):
+                    with open(f"data/{fn}", "wb") as f:
                         msg = ftp.retrbinary(f"RETR {fn}", f.write)
                     logging.info("Download %s: %s", fn, msg)
-                except FileExistsError:
+                else:
                     logging.info("%s already exists: Skip download", fn)
                 dld.append((y, m))
             msg = ftp.cwd(PATH_MULTI)
@@ -124,11 +124,11 @@ def download_data(grid_ids, par_ids, years, months):
                 logging.debug(
                     "%d-%02d already downloaded from multi_1: Skip download", y, m)
                 continue
-            try:
-                with open(f"data/{fn}", "xb") as f:
+            if os.path.getsize(f"data/{fn}") != ftp.size(fn):
+                with open(f"data/{fn}", "wb") as f:
                     msg = ftp.retrbinary(f"RETR {fn}", f.write)
                 logging.info("Download %s: %s", fn, msg)
-            except FileExistsError:
+            else:
                 logging.info("%s already exists: Skip download", fn)
 
 
