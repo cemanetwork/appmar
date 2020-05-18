@@ -1057,7 +1057,7 @@ class FrameAnalysis(wx.Frame):
     def on_mean_climate(self, event):
         """TO DO"""
         self.Close(True)
-        frm_mean_climate = FrameAnalysisMeanClimate(None, title="Extreme Climate Analysis")
+        frm_mean_climate = FrameAnalysisMeanClimate(None, title="Mean Climate Analysis")
         frm_mean_climate.Show()
 
     def on_extreme_climate(self, event):
