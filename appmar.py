@@ -320,14 +320,14 @@ class FrameDownload(wx.Frame):
         self.Close(True)
 
 
-class FrameAnalysisShortTerm(wx.Frame):
+class FrameAnalysisMeanClimate(wx.Frame):
     """
     TO DO
     """
 
     def __init__(self, *args, **kw):
         # ensure the parent's __init__ is called
-        super(FrameAnalysisShortTerm, self).__init__(*args, **kw)
+        super(FrameAnalysisMeanClimate, self).__init__(*args, **kw)
 
         # create a panel in the frame
         pnl = wx.Panel(self)
@@ -506,14 +506,14 @@ class FrameAnalysisShortTerm(wx.Frame):
         """Close the frame, terminating the application."""
         self.Close(True)
 
-class FrameAnalysisLongTermStorm(wx.Frame):
+class FrameAnalysisExtremeClimateStorm(wx.Frame):
     """
     TO DO
     """
 
     def __init__(self, *args, **kw):
         # ensure the parent's __init__ is called
-        super(FrameAnalysisLongTermStorm, self).__init__(*args, **kw)
+        super(FrameAnalysisExtremeClimateStorm, self).__init__(*args, **kw)
 
         # create a panel in the frame
         pnl = wx.Panel(self)
@@ -790,14 +790,14 @@ class FrameAnalysisLongTermStorm(wx.Frame):
         """Close the frame, terminating the application."""
         self.Close(True)
 
-class FrameAnalysisLongTermMaps(wx.Frame):
+class FrameAnalysisExtremeClimateMaps(wx.Frame):
     """
     TO DO
     """
 
     def __init__(self, pr, q, *args, **kw):
         # ensure the parent's __init__ is called
-        super(FrameAnalysisLongTermMaps, self).__init__(*args, **kw)
+        super(FrameAnalysisExtremeClimateMaps, self).__init__(*args, **kw)
 
         # create a panel in the frame
         self.pr = pr
@@ -934,14 +934,14 @@ class FrameAnalysisLongTermMaps(wx.Frame):
         self.Close(True)
 
 
-class FrameAnalysisLongTerm(wx.Frame):
+class FrameAnalysisExtremeClimate(wx.Frame):
     """
     TO DO
     """
 
     def __init__(self, *args, **kw):
         # ensure the parent's __init__ is called
-        super(FrameAnalysisLongTerm, self).__init__(*args, **kw)
+        super(FrameAnalysisExtremeClimate, self).__init__(*args, **kw)
 
         # create a panel in the frame
         pnl = wx.Panel(self)
@@ -951,7 +951,7 @@ class FrameAnalysisLongTerm(wx.Frame):
             pnl, label="Welcome to Analysis and Processing of Climate Information Module")
 
         # put some buttons
-        btn_weibull = wx.Button(pnl, label="Long term though Weibull Distribution")
+        btn_weibull = wx.Button(pnl, label="EVA through Weibull Distribution")
         btn_storms = wx.Button(pnl, label="Ocurrences of storms analysis")
         btn_maps = wx.Button(pnl, label="Regional maps")
         btn_exit = wx.Button(pnl, label="Exit")
@@ -1004,13 +1004,13 @@ class FrameAnalysisLongTerm(wx.Frame):
         self.Close(True)
         pr = wx.GetTextFromUser("Return period (years):", default_value="100")
         q = 1 - 1/float(pr)
-        frm = FrameAnalysisLongTermMaps(pr, q, None, title="Regional Maps")
+        frm = FrameAnalysisExtremeClimateMaps(pr, q, None, title="Regional Maps")
         frm.Show()
 
     def on_storms(self, event):
         """Analysis of storms ocurrences"""
         self.Close(True)
-        frm = FrameAnalysisLongTermStorm(None, title="Storm Analysis")
+        frm = FrameAnalysisExtremeClimateStorm(None, title="Storm Analysis")
         frm.Show()
 
     def on_exit(self, event):
@@ -1020,7 +1020,7 @@ class FrameAnalysisLongTerm(wx.Frame):
 
 class FrameAnalysis(wx.Frame):
     """
-    A frame that asks for short-term or long-term type of analysis.
+    A frame that asks for mean and extreme climate type of analysis.
     """
 
     def __init__(self, *args, **kw):
@@ -1035,36 +1035,36 @@ class FrameAnalysis(wx.Frame):
             pnl, label="Analysis and Processing of Climate Information")
 
         # put some buttons
-        btn_short_term = wx.Button(pnl, label="Short Term Analysis")
-        btn_long_term = wx.Button(pnl, label="Long Term Analysis")
+        btn_mean_climate = wx.Button(pnl, label="Mean Climate Analysis")
+        btn_extreme_climate = wx.Button(pnl, label="Extreme Climate Analysis")
         btn_exit = wx.Button(pnl, label="Exit")
 
         # associate a handler function to the buttons
-        btn_short_term.Bind(wx.EVT_BUTTON, self.on_short_term)
-        btn_long_term.Bind(wx.EVT_BUTTON, self.on_long_term)
+        btn_mean_climate.Bind(wx.EVT_BUTTON, self.on_mean_climate)
+        btn_extreme_climate.Bind(wx.EVT_BUTTON, self.on_extreme_climate)
         btn_exit.Bind(wx.EVT_BUTTON, self.on_exit)
 
         # create a sizer to manage the layout of child widgets
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer_flags = wx.SizerFlags().Border().Center()
         sizer.Add(txt_welcome, sizer_flags)
-        sizer.Add(btn_short_term, sizer_flags)
-        sizer.Add(btn_long_term, sizer_flags)
+        sizer.Add(btn_mean_climate, sizer_flags)
+        sizer.Add(btn_extreme_climate, sizer_flags)
         sizer.Add(btn_exit, sizer_flags)
         pnl.SetSizer(sizer)
         sizer.Fit(self)
 
-    def on_short_term(self, event):
+    def on_mean_climate(self, event):
         """TO DO"""
         self.Close(True)
-        frm_short_term = FrameAnalysisShortTerm(None, title="Short Term Analysis")
-        frm_short_term.Show()
+        frm_mean_climate = FrameAnalysisMeanClimate(None, title="Extreme Climate Analysis")
+        frm_mean_climate.Show()
 
-    def on_long_term(self, event):
+    def on_extreme_climate(self, event):
         """TO DO"""
         self.Close(True)
-        frm_long_term = FrameAnalysisLongTerm(None, title="Long Term Analysis")
-        frm_long_term.Show()
+        frm_extreme_climate = FrameAnalysisExtremeClimate(None, title="Extreme Climate Analysis")
+        frm_extreme_climate.Show()
 
     def on_exit(self, event):
         """Close the frame, terminating the application."""
