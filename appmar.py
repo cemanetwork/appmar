@@ -25,6 +25,7 @@ from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import xarray as xr
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
+DEFAULT_COORD = "-80.05,25.78"
 LAND_10M = cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor="k", facecolor="grey")
 N = 181
 
@@ -369,7 +370,7 @@ class FrameAnalysisMeanClimate(wx.Frame):
         season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall"])
         if season:
             ms = MONTHS[season]
-            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
+            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
             str_lon, str_lat = str_coords.split(",")
             lon = float(str_lon)
             lat = float(str_lat)
@@ -399,7 +400,7 @@ class FrameAnalysisMeanClimate(wx.Frame):
         season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall"])
         if season:
             ms = MONTHS[season]
-            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
+            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
             str_lon, str_lat = str_coords.split(",")
             lon = float(str_lon)
             lat = float(str_lat)
@@ -429,7 +430,7 @@ class FrameAnalysisMeanClimate(wx.Frame):
         season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall"])
         if season:
             ms = MONTHS[season]
-            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
+            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
             str_lon, str_lat = str_coords.split(",")
             lon = float(str_lon)
             lat = float(str_lat)
@@ -465,8 +466,8 @@ class FrameAnalysisMeanClimate(wx.Frame):
             im = ax.imshow(p, origin="lower", extent=(0, 360, hs.min(), hs.max()), aspect="auto", cmap=cmap)
             cbar = frm_canvas.fig.colorbar(im)
             cbar.ax.set_ylabel("Probability")
-            cs = ax.contour(dp, hs, p, colors="k", levels=4, linewidths=1)
-            ax.clabel(cs, inline_spacing=0.1)
+            #cs = ax.contour(dp, hs, p, colors="k", levels=4, linewidths=1)
+            #ax.clabel(cs, inline_spacing=0.1)
             ax.set_xlabel("Average direction at the peak period (deg)")
             ax.set_ylabel("Significant Wave Height (m)")
             ax.set_title(season)
@@ -478,7 +479,7 @@ class FrameAnalysisMeanClimate(wx.Frame):
         season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall"])
         if season:
             ms = MONTHS[season]
-            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
+            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
             str_lon, str_lat = str_coords.split(",")
             lon = float(str_lon)
             lat = float(str_lat)
@@ -554,7 +555,7 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
     def on_energetic(self, event):
         """To DO"""
         ms = MONTHS["All"]
-        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
+        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
         str_lon, str_lat = str_coords.split(",")
         lon = float(str_lon)
         lat = float(str_lat)
@@ -606,7 +607,7 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
     def on_storms_annual(self, event):
         """Analysis of storms ocurrences"""
         ms = MONTHS["All"]
-        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
+        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
         str_lon, str_lat = str_coords.split(",")
         lon = float(str_lon)
         lat = float(str_lat)
@@ -653,7 +654,7 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
     def on_storms_monthly(self, event):
         """TO DO"""
         ms = MONTHS["All"]
-        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
+        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
         str_lon, str_lat = str_coords.split(",")
         lon = float(str_lon)
         lat = float(str_lat)
@@ -698,7 +699,7 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
     def on_energies_annual(self, event):
         """Analysis of storms ocurrences"""
         ms = MONTHS["All"]
-        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
+        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
         str_lon, str_lat = str_coords.split(",")
         lon = float(str_lon)
         lat = float(str_lat)
@@ -745,7 +746,7 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
     def on_energies_monthly(self, event):
         """TO DO"""
         ms = MONTHS["All"]
-        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
+        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
         str_lon, str_lat = str_coords.split(",")
         lon = float(str_lon)
         lat = float(str_lat)
@@ -864,11 +865,12 @@ class FrameAnalysisExtremeClimateMaps(wx.Frame):
         min_lat = data.coords["latitude"].values.min()
         max_lat = data.coords["latitude"].values.max()
         extent = (min_lon, max_lon, min_lat, max_lat)
-        ax = plt.axes(projection=ccrs.PlateCarree())
+        frm_canvas = FrameCanvas(parent=None, title="Regional quantile map")
+        ax = frm_canvas.fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
         ax.set_title(f"Return period (Annual) = {self.pr} years")
         data = interp_idw(interp_idw(data))
         im = ax.imshow(data, origin="upper", extent=extent, transform=ccrs.PlateCarree(), cmap="jet", interpolation="bilinear")
-        cbar = plt.colorbar(im)
+        cbar = frm_canvas.fig.colorbar(im)
         cbar.ax.set_ylabel("Significant Wave Height (m)")
         ax.add_feature(LAND_10M)
         gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True)
@@ -876,8 +878,8 @@ class FrameAnalysisExtremeClimateMaps(wx.Frame):
         gl.ylabels_right = False
         gl.xformatter = LONGITUDE_FORMATTER
         gl.yformatter = LATITUDE_FORMATTER
-        plt.tight_layout()
-        plt.show()
+        gl.xlabel_style = {'rotation': 30}
+        frm_canvas.Show()
 
 
     def on_wind(self, event):
@@ -914,11 +916,12 @@ class FrameAnalysisExtremeClimateMaps(wx.Frame):
         min_lat = data.coords["latitude"].values.min()
         max_lat = data.coords["latitude"].values.max()
         extent = (min_lon, max_lon, min_lat, max_lat)
-        ax = plt.axes(projection=ccrs.PlateCarree())
+        frm_canvas = FrameCanvas(parent=None, title="Regional quantile map")
+        ax = frm_canvas.fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
         ax.set_title(f"Return period (Annual) = {self.pr} years")
         data = interp_idw(interp_idw(data))
         im = ax.imshow(data, origin="upper", extent=extent, transform=ccrs.PlateCarree(), cmap="jet", interpolation="bilinear")
-        cbar = plt.colorbar(im)
+        cbar = frm_canvas.fig.colorbar(im)
         cbar.ax.set_ylabel("Wind speed (m/s)")
         ax.add_feature(LAND_10M)
         gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True)
@@ -926,8 +929,8 @@ class FrameAnalysisExtremeClimateMaps(wx.Frame):
         gl.ylabels_right = False
         gl.xformatter = LONGITUDE_FORMATTER
         gl.yformatter = LATITUDE_FORMATTER
-        plt.tight_layout()
-        plt.show()
+        gl.xlabel_style = {'rotation': 30}
+        frm_canvas.Show()
 
     def on_exit(self, event):
         """Close the frame, terminating the application."""
@@ -980,7 +983,7 @@ class FrameAnalysisExtremeClimate(wx.Frame):
         season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall"])
         if season:
             ms = MONTHS[season]
-            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value="-74.85,11.13")
+            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
             str_lon, str_lat = str_coords.split(",")
             lon = float(str_lon)
             lat = float(str_lat)

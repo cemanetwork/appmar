@@ -9,7 +9,7 @@ dependencies:
   - gdal
   - wxpython
   - numpy
-  - matplotlib
+  - matplotlib=3.2
   - scipy
   - xarray
   - cartopy
