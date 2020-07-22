@@ -1,5 +1,7 @@
 # APPMAR 1.0
 
+*If you prefer to extract raw data series for your own analyses, try [APPMAR 2](https://github.com/cemanetwork/appmar2) (WIP).*
+
 A toolbox for management of meteorological and marine data on limited information regions.
 
 * German Rivillas-Ospina
