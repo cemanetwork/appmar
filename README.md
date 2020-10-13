@@ -11,7 +11,7 @@ A toolbox for management of meteorological and marine data on limited informatio
 * Diego Casas
 * Roberto Guerrero
 
-DOI: 10.20944/preprints202002.0237.v1
+DOI: [10.20944/preprints202002.0237.v1](https://doi.org/10.20944/preprints202002.0237.v1)
 
 This application is composed of two main modules: the first module allows the downloading of
 information from the database (NOAA - WW3); the second module uses the principles of statistical
