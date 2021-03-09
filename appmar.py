@@ -10,7 +10,7 @@ Germán Rivillas Ospina, PhD
 import os
 import wx
 import matplotlib
-from libappmar import download_data, frequency_curve, joint_distribution, load_data, load_obj, save_obj, merge_data, weibull_data, load_max, interp_idw
+from libappmar import download_data, frequency_curve, joint_distribution, load_data, load_obj, save_obj, merge_data, weibull_data, load_max, interp_idw, get_defaults, plot_weibull
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wx import NavigationToolbar2Wx as NavigationToolbar
 from matplotlib.figure import Figure
@@ -18,14 +18,14 @@ from scipy import stats
 import numpy as np
 from windrose import WindroseAxes
 import matplotlib.pyplot as plt
-import weibull
 import cartopy.feature as cfeature
 import cartopy.crs as ccrs
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import xarray as xr
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
-DEFAULT_COORD = "-80.05,25.78"
+MONTHS, DEFAULT_COORD, BOX = get_defaults()
+
 LAND_10M = cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor="k", facecolor="grey")
 N = 181
 
@@ -35,14 +35,6 @@ matplotlib.rcParams['mathtext.fontset'] = "custom"
 matplotlib.rcParams['mathtext.rm'] = "Times New Roman"
 matplotlib.rcParams['mathtext.it'] = "Times New Roman:italic"
 matplotlib.rcParams['mathtext.bf'] = "Times New Roman:bold"
-
-MONTHS = {
-    "Winter": [12, 1, 2],
-    "Summer": [6, 7, 8],
-    "Spring": [3, 4, 5],
-    "Fall": [9, 10, 11],
-    "All": [*range(1, 13)]
-}
 
 STR_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
@@ -367,7 +359,7 @@ class FrameAnalysisMeanClimate(wx.Frame):
 
     def on_height_exceedance(self, event):
         """Plots Probability of Exceedance Estimates of mean Significant Wave Height for a season."""
-        season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall"])
+        season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall", "All"])
         if season:
             ms = MONTHS[season]
             str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
@@ -397,7 +389,7 @@ class FrameAnalysisMeanClimate(wx.Frame):
 
     def on_period_exceedance(self, event):
         """Plots Probability of Exceedance Estimates of mean peak period for a season."""
-        season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall"])
+        season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall", "All"])
         if season:
             ms = MONTHS[season]
             str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
@@ -426,8 +418,7 @@ class FrameAnalysisMeanClimate(wx.Frame):
             frm_canvas.Show()
 
     def on_height_joint(self, event):
-        """TO DO"""
-        season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall"])
+        season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall", "All"])
         if season:
             ms = MONTHS[season]
             str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
@@ -465,7 +456,7 @@ class FrameAnalysisMeanClimate(wx.Frame):
             cmap = matplotlib.colors.ListedColormap(cmap, name='myColorMap', N=cmap.shape[0])
             im = ax.imshow(p, origin="lower", extent=(0, 360, hs.min(), hs.max()), aspect="auto", cmap=cmap)
             cbar = frm_canvas.fig.colorbar(im)
-            cbar.ax.set_ylabel("Probability")
+            cbar.ax.set_ylabel("Probability density")
             #cs = ax.contour(dp, hs, p, colors="k", levels=4, linewidths=1)
             #ax.clabel(cs, inline_spacing=0.1)
             ax.set_xlabel("Average direction at the peak period (deg)")
@@ -475,8 +466,7 @@ class FrameAnalysisMeanClimate(wx.Frame):
             frm_canvas.Show()
 
     def on_roses(self, event):
-        """TO DO"""
-        season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall"])
+        season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall", "All"])
         if season:
             ms = MONTHS[season]
             str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
@@ -833,7 +823,7 @@ class FrameAnalysisExtremeClimateMaps(wx.Frame):
 
     def on_waves(self, event):
         """TO DO"""
-        str_coords = wx.GetTextFromUser("Coordinates (lon1, lon2, lat1, lat2):", default_value="-75.3,-74.1,10,11.5")
+        str_coords = wx.GetTextFromUser("Coordinates (lon1, lon2, lat1, lat2):", default_value=BOX)
         lon1, lon2, lat1, lat2 = [float(x) for x in str_coords.split(",")]
         if lon1 < 0:
             lon1 = 360 + lon1
@@ -884,7 +874,7 @@ class FrameAnalysisExtremeClimateMaps(wx.Frame):
 
     def on_wind(self, event):
         """TO DO"""
-        str_coords = wx.GetTextFromUser("Coordinates (lon1, lon2, lat1, lat2):", default_value="-75.3,-74.1,10,11.5")
+        str_coords = wx.GetTextFromUser("Coordinates (lon1, lon2, lat1, lat2):", default_value=BOX)
         lon1, lon2, lat1, lat2 = [float(x) for x in str_coords.split(",")]
         if lon1 < 0:
             lon1 = 360 + lon1
@@ -979,8 +969,8 @@ class FrameAnalysisExtremeClimate(wx.Frame):
         sizer.Fit(self)
 
     def on_weibull(self, event):
-        """Extreme value analysis - Maximum Weibull distribution"""
-        season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall"])
+        """Extreme value analysis - Weibull Maximum distribution"""
+        season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall", "All"])
         if season:
             ms = MONTHS[season]
             str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
@@ -998,9 +988,11 @@ class FrameAnalysisExtremeClimate(wx.Frame):
                 peaks_hs = weibull_data("hs", ms, lon, lat)
                 save_obj(peaks_hs, fname)
             progress_dlg.Update(100)
-            analysis = weibull.Analysis(peaks_hs, unit="m")
-            analysis.fit()
-            analysis.probplot()
+            frm_canvas = FrameCanvas(parent=None, title="Weibull probability plot")
+            ax = frm_canvas.fig.add_subplot()
+            plot_weibull(peaks_hs, ax)
+            ax.set_title(season)
+            frm_canvas.Show()
 
     def on_maps(self, event):
         """TO DO"""
