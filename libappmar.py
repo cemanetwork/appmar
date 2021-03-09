@@ -10,10 +10,12 @@ import logging
 import os
 from ftplib import FTP
 import pickle
+import configparser
 
 import xarray as xr
 import numpy as np
 from osgeo import gdal
+from scipy.stats import linregress
 
 logging.basicConfig(level=logging.INFO)
 
@@ -32,7 +34,12 @@ DIR = [
     (1, -1)
 ]
 
+SEASONS = ["Winter", "Summer", "Spring", "Fall"]
+
+CONF_FILE = "config.ini"
+
 ONE_OVER_SQRT2 = 2**-0.5
+PNEX100 = 0.99
 
 def merge_data(par):
     xs = []
@@ -328,3 +335,79 @@ def interp_idw(arr):
                     continue
                 arr[i, j] = s1 / s2
     return arr
+
+
+def parse_config():
+    config = configparser.ConfigParser()
+    config.read(CONF_FILE)
+    months = {"All": [*range(1, 13)]}
+    for season in SEASONS:
+        months[season] = [int(x) for x in config["seasons"][season].split(",")]
+    point = config["location"]["point"]
+    box = config["location"]["box"]
+    return months, point, box
+
+
+def get_defaults():
+    if os.path.exists(CONF_FILE):
+        months, point, box = parse_config()
+    else:
+        # Caribbean seasons by default
+        months = {
+            "Winter": [12, 1, 2],
+            "Summer": [6, 7, 8],
+            "Spring": [3, 4, 5],
+            "Fall": [9, 10, 11],
+            "All": [*range(1, 13)]
+        }
+        # Magdalena River Mouth by default
+        point = "-74.85,11.13"
+        box = "-75.3,-74.1,10,11.5"
+    return months, point, box
+
+
+def plotpos(n):
+    i = np.arange(1, n + 1)
+    P = i / (n + 1)
+    return P
+
+
+def fit_weibull3(x, tol=1e-4, delta=1e-5, verbose=False):
+    y = plotpos(len(x))
+    eta = -np.log(-np.log(y))
+    xmax = max(x)
+    e = 1
+    n = 1
+    r1 = 0
+    while e > tol:
+        loc = xmax * n + delta
+        xi = -np.log(loc - x)
+        r0 = r1
+        slope, intercept, r1, *_ = linregress(xi, eta)
+        e = r1**2 - r0**2
+        if verbose:
+            print(n, loc)
+        n += 1
+    shape = slope
+    scale = np.exp(intercept/shape)
+    return shape, loc, scale, r1
+
+def plot_weibull(arr, ax):
+    xobs = np.sort(arr)
+    shape, loc, scale, r = fit_weibull3(xobs)
+    x100 = loc - scale * (-np.log(PNEX100))**(1/shape)
+    xfit = np.array([xobs[0], x100])
+    pobs = plotpos(len(xobs))
+    pfit = np.exp(-((loc - xfit) / scale)**shape)
+    ax.set_xscale('function', functions=(lambda x: -np.log(loc - x), lambda xi: loc - np.exp(-xi)))
+    ax.set_yscale('function', functions=(lambda y: -np.log(-np.log(y)), lambda eta: np.exp(-np.exp(-eta))))
+    ax.set_ylim([0.009, 0.991])
+    ax.set_yticks([0.50, 0.80, 0.90, 0.96, 0.98, 0.99])
+    ax.set_yticklabels([2, 5, 10, 25, 50, 100])
+    ax.grid()
+    ax.set_xlabel("Significant wave height (m)")
+    ax.set_ylabel("Return period (years)")
+    ax.scatter(xobs, pobs, color='r', marker='+')
+    ax.plot(xfit, pfit, 'k', label=f"Shape = {shape:.4f}\nLocation = {loc:.4f}\nScale = {scale:.4f}\nr² = {r**2:.4}")
+    ax.legend(handletextpad=0, handlelength=0)
+    
