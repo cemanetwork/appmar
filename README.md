@@ -5,11 +5,13 @@
 A toolbox for management of meteorological and marine data on limited information regions.
 
 * German Rivillas-Ospina
-* Marianella Bolivar
-* Mauro Maza Chamorro
-* Gabriel Ruiz
 * Diego Casas
+* Mauro Maza Chamorro
+* Marianella Bolivar
+* Gabriel Ruiz
 * Roberto Guerrero
+* José Horrillo
+* Karina Díaz
 
 DOI: [10.20944/preprints202002.0237.v1](https://doi.org/10.20944/preprints202002.0237.v1)
 
