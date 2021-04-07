@@ -9,6 +9,7 @@ Germán Rivillas Ospina, PhD
 
 import os
 import wx
+import wx.lib.agw.hyperlink as hl
 import matplotlib
 from libappmar import download_data, frequency_curve, joint_distribution, load_data, load_obj, save_obj, merge_data, weibull_data, load_max, interp_idw, get_defaults, plot_weibull
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
@@ -1079,34 +1080,32 @@ class FrameMain(wx.Frame):
         pnl = wx.Panel(self)
 
         # put some text
-        txt_welcome = wx.StaticText(pnl, label="Welcome to APPMAR 1.0")
-        txt_author = wx.StaticText(
-            pnl,
-            label="Marianella Bolívar\nDiego Casas\nGerman Rivillas Ospina, PhD",
-            style=wx.ALIGN_CENTER,
-        )
+        txt_appname = wx.StaticText(pnl, label="APPMAR 1.0")
+        txt_appname.SetFont(wx.Font(15, wx.DEFAULT, wx.NORMAL, wx.BOLD))
 
         # put some buttons
         btn_download = wx.Button(pnl, label="Download Database Information")
         btn_analysis = wx.Button(
             pnl, label="Analysis and Processing of Climate Information")
-        btn_exit = wx.Button(pnl, label="Exit")
 
         # associate a handler function to the buttons
         btn_download.Bind(wx.EVT_BUTTON, self.on_download)
         btn_analysis.Bind(wx.EVT_BUTTON, self.on_analysis)
-        btn_exit.Bind(wx.EVT_BUTTON, self.on_exit)
 
         # create a sizer to manage the layout of child widgets
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer_flags = wx.SizerFlags().Border().Center()
-        sizer.Add(txt_welcome, sizer_flags)
-        sizer.Add(txt_author, sizer_flags)
-        sizer.Add(btn_download, sizer_flags)
-        sizer.Add(btn_analysis, sizer_flags)
-        sizer.Add(btn_exit, sizer_flags)
-        pnl.SetSizer(sizer)
-        sizer.Fit(self)
+        sizerv = wx.BoxSizer(wx.VERTICAL)
+        stbx_d = wx.StaticBox(pnl, wx.ID_ANY, "Download", size=(350, 200))
+        stbx_a = wx.StaticBox(pnl, wx.ID_ANY, "Analysis", size=(350, 200))
+        sizerd = wx.StaticBoxSizer(stbx_d, wx.VERTICAL)
+        sizera = wx.StaticBoxSizer(stbx_a, wx.VERTICAL)
+        sizer_flags = wx.SizerFlags().Border(wx.ALL, 10).Center()
+        sizerv.Add(txt_appname, sizer_flags)
+        sizerv.Add(sizerd, sizer_flags)
+        sizerv.Add(sizera, sizer_flags)
+        sizerd.Add(btn_download, sizer_flags)
+        sizera.Add(btn_analysis, sizer_flags)
+        pnl.SetSizer(sizerv)
+        sizerv.Fit(self)
 
     def on_download(self, event):
         """Hides the main frame and opens the download frame."""
@@ -1120,13 +1119,97 @@ class FrameMain(wx.Frame):
         frm_analysis = FrameAnalysis(None, title="Analysis and Processing of Climate Information Module")
         frm_analysis.Show()
 
-    def on_exit(self, event):
-        """Close the frame, terminating the application."""
-        self.Close(True)
 
+class FrameAbout(wx.Frame):
+    """
+    A Frame that shows the About window.
+    """
+
+    def __init__(self, *args, **kw):
+        # ensure the parent's __init__ is called
+        super(FrameAbout, self).__init__(*args, **kw)
+
+        # create a panel in the frame
+        pnl = wx.Panel(self)
+
+        # add CEMAN logo
+        logo = wx.StaticBitmap(pnl, wx.ID_ANY, wx.Bitmap("ceman.png", wx.BITMAP_TYPE_ANY))
+
+        # put some text
+        txt_appname = wx.StaticText(pnl, label="APPMAR 1.0 by CEMAN", style=wx.ALIGN_CENTER)
+        txt_authors = wx.StaticText(
+            pnl,
+            label="Authors:\n\nMarianella Bolívar\nDiego Casas\nGerman Rivillas Ospina, PhD",
+            style=wx.ALIGN_CENTER,
+        )
+        lnkgh = hl.HyperLinkCtrl(pnl, wx.ID_ANY, "Source code repository", URL="https://github.com/cemanetwork/appmar")
+
+        # create a sizer to manage the layout of child widgets
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer_flags = wx.SizerFlags().Border().Center()
+        sizer.Add(logo, sizer_flags)
+        sizer.Add(txt_appname, sizer_flags)
+        sizer.Add(txt_authors, sizer_flags)
+        sizer.Add(lnkgh, sizer_flags)
+        sizer.AddSpacer(20)
+        pnl.SetSizer(sizer)
+        sizer.Fit(self)
+
+class FrameStart(wx.Frame):
+    """
+    A Frame that shows the start window.
+    """
+
+    def __init__(self, *args, **kw):
+        # ensure the parent's __init__ is called
+        super(FrameStart, self).__init__(*args, **kw)
+
+        # create a panel in the frame
+        pnl = wx.Panel(self)
+
+        # add CEMAN logo
+        logo = wx.StaticBitmap(pnl, wx.ID_ANY, wx.Bitmap("wave.png", wx.BITMAP_TYPE_ANY))
+
+        # put some text
+        txt_welcome = wx.StaticText(pnl, label="Welcome to", style=wx.ALIGN_CENTER)
+        txt_appname = wx.StaticText(pnl, label="APPMAR 1.0")
+        txt_appname.SetFont(wx.Font(20, wx.DEFAULT, wx.NORMAL, wx.BOLD))
+        
+        # put some buttons
+        btn_start = wx.Button(pnl, label="Start")
+        btn_about = wx.Button(pnl, label="About APPMAR")
+
+        # associate a handler function to the buttons
+        btn_about.Bind(wx.EVT_BUTTON, self.on_about)
+        btn_start.Bind(wx.EVT_BUTTON, self.on_start)
+
+        # create a sizer to manage the layout of child widgets
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizerh = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_flags = wx.SizerFlags().Border().Center()
+        sizer.Add(logo, sizer_flags)
+        sizer.Add(txt_welcome, sizer_flags)
+        sizer.Add(txt_appname, sizer_flags)
+        sizer.Add(sizerh, sizer_flags)
+        sizerh.Add(btn_start, sizer_flags)
+        sizerh.AddSpacer(100)
+        sizerh.Add(btn_about, sizer_flags)
+        pnl.SetSizer(sizer)
+        sizer.Fit(self)
+
+    def on_start(self, event):
+        """Hides the start frame and opens the main frame."""
+        self.Close(True)
+        frm_main = FrameMain(None, title="APPMAR 1.0")
+        frm_main.Show()
+
+    def on_about(self, event):
+        """Hides the start frame and opens the about frame."""
+        frm_about = FrameAbout(None, title="About APPMAR")
+        frm_about.Show()
 
 if __name__ == "__main__":
     APP = wx.App()
-    FRM = FrameMain(None, title="APPMAR 1.0")
+    FRM = FrameStart(None, title="APPMAR 1.0")
     FRM.Show()
     APP.MainLoop()
