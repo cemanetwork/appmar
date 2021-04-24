@@ -66,3 +66,10 @@ If you want to generate fresh plots, delete the `tmp` subdirectory. Also, if you
 ## Update
 
 When an update is available, download the the new source code and replace the `appmar.py` and `libappmar.py` files. Delete the `tmp` and `__pycache__` directories for changes to take effect the next time you start APPMAR.
+
+The last version of APPMAR implements the k-means clustering method to find representative sea state scenarios. In you have a previous version, download the new `appmar.py` and `libappmar.py` files, and install the `scikit-learn` and `kneed` packages on the APPMAR environment. In order to install the new dependencies, run the following commands from the command lines:
+
+```
+conda activate appmarenv
+conda install -c conda-forge scikit-learn kneed
+```
