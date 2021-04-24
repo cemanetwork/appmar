@@ -13,3 +13,5 @@ dependencies:
   - scipy
   - xarray
   - cartopy
+  - scikit-learn
+  - kneed
