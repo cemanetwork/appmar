@@ -11,7 +11,7 @@ import os
 import wx
 import wx.lib.agw.hyperlink as hl
 import matplotlib
-from libappmar import download_data, frequency_curve, joint_distribution, load_data, load_obj, save_obj, merge_data, weibull_data, load_max, interp_idw, get_defaults, plot_weibull
+from libappmar import download_data, frequency_curve, joint_distribution, load_data, load_obj, save_obj, merge_data, weibull_data, load_max, interp_idw, get_defaults, plot_weibull, compute_clusters, plot_clusters
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wx import NavigationToolbar2Wx as NavigationToolbar
 from matplotlib.figure import Figure
@@ -335,6 +335,7 @@ class FrameAnalysisMeanClimate(wx.Frame):
         btn_period_exceedance = wx.Button(pnl, label="Exceedance Probability of Tp (s)")
         btn_height_joint = wx.Button(pnl, label="Joint Probability of Hs (m) - θ (deg)")
         btn_roses = wx.Button(pnl, label="Wave Roses")
+        btn_clusters = wx.Button(pnl, label="Representative Hs (m) - Tp (s) scenarios")
         btn_exit = wx.Button(pnl, label="Exit")
 
         # associate a handler function to the buttons
@@ -342,18 +343,20 @@ class FrameAnalysisMeanClimate(wx.Frame):
         btn_period_exceedance.Bind(wx.EVT_BUTTON, self.on_period_exceedance)
         btn_height_joint.Bind(wx.EVT_BUTTON, self.on_height_joint)
         btn_roses.Bind(wx.EVT_BUTTON, self.on_roses)
+        btn_clusters.Bind(wx.EVT_BUTTON, self.on_clusters)
         btn_exit.Bind(wx.EVT_BUTTON, self.on_exit)
 
         # create a sizer to manage the layout of child widgets
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer_flags = wx.SizerFlags().Border().Center()
-        grdsizer = wx.GridSizer(rows=2, cols=2, vgap=5, hgap=5)
+        grdsizer = wx.GridSizer(rows=3, cols=2, vgap=5, hgap=5)
         sizer.Add(txt_welcome, sizer_flags)
         sizer.Add(grdsizer, sizer_flags)
         grdsizer.Add(btn_height_exceedance, sizer_flags)
         grdsizer.Add(btn_period_exceedance, sizer_flags)
         grdsizer.Add(btn_height_joint, sizer_flags)
         grdsizer.Add(btn_roses, sizer_flags)
+        grdsizer.Add(btn_clusters, sizer_flags)
         sizer.Add(btn_exit, sizer_flags)
         pnl.SetSizer(sizer)
         sizer.Fit(self)
@@ -492,6 +495,38 @@ class FrameAnalysisMeanClimate(wx.Frame):
             ax.set_title("Significant Wave Height - " + season, pad=20)
             ax.set_legend(title="$H_s$ (m)")
             frm_canvas.Show()
+
+
+    def on_clusters(self, event):
+        season = "All"
+        if season:
+            ms = MONTHS[season]
+            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
+            str_lon, str_lat = str_coords.split(",")
+            lon = float(str_lon)
+            lat = float(str_lat)
+            if lon < 0:
+                lon = 360 + lon
+            progress_dlg = wx.ProgressDialog("Read and analyze", "Reading and analyzing wave data...")
+            progress_dlg.Pulse()
+            fname = f"tmp/hs-tp-{season}-{lon}-{lat}.tmp"
+            try:
+                hs_tp = load_obj(fname)
+            except FileNotFoundError:
+                hs_tp  = joint_distribution(["hs", "tp"], ms, lon, lat)
+                save_obj(hs_tp, fname)
+            progress_dlg.Update(100)
+            frm_canvas = FrameCanvas(parent=None, title="Representative Hs - Tp scenarios")
+            ax = frm_canvas.fig.add_subplot()
+            hs, tp = hs_tp
+            pairs = np.column_stack((hs, tp))
+            centers, labels = compute_clusters(pairs)
+            plot_clusters(pairs, centers, labels, ax)
+            frm_canvas.Show()
+            scenarios = " ; ".join(f"{h:.2f},{t:.2f}" for h, t in centers)
+            dlg = wx.TextEntryDialog(None,"Hs1,Tp1 ; Hs2,Tp2 ; ... ; HsN,TpN", "Representative Hs-Tp scenarios", scenarios)
+            dlg.SetSize((600,180))
+            dlg.ShowModal()
 
 
     def on_exit(self, event):
