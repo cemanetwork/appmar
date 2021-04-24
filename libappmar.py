@@ -16,6 +16,9 @@ import xarray as xr
 import numpy as np
 from osgeo import gdal
 from scipy.stats import linregress
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+from kneed import KneeLocator
 
 logging.basicConfig(level=logging.INFO)
 
@@ -410,4 +413,26 @@ def plot_weibull(arr, ax):
     ax.scatter(xobs, pobs, color='r', marker='+')
     ax.plot(xfit, pfit, 'k', label=f"Shape = {shape:.4f}\nLocation = {loc:.4f}\nScale = {scale:.4f}\nr² = {r**2:.4}")
     ax.legend(handletextpad=0, handlelength=0)
-    
+
+def compute_clusters(pairs):
+    scaler = StandardScaler()
+    scaled_pairs = scaler.fit_transform(pairs)
+    sse = []
+    for k in range(1, 11):
+        kmeans = KMeans(n_clusters=k)
+        kmeans.fit(scaled_pairs)
+        sse.append(kmeans.inertia_)
+    kl = KneeLocator(range(1, 11), sse, curve="convex", direction="decreasing")
+    k = kl.elbow
+    kmeans = KMeans(n_clusters=k)
+    kmeans.fit(scaled_pairs)
+    centers = scaler.inverse_transform(kmeans.cluster_centers_)
+    labels = kmeans.labels_
+    return centers, labels
+
+
+def plot_clusters(pairs, centers, labels, ax):
+    ax.scatter(pairs[:, 0], pairs[:, 1], c=labels.astype(float), s=0.5, cmap="Set1")
+    ax.scatter(centers[:, 0], centers[:, 1], c="white", edgecolor="k")
+    ax.set_xlabel("Significant wave height (m)")
+    ax.set_ylabel("Peak period (s)")
