@@ -13,7 +13,19 @@ A toolbox for management of meteorological and marine data on limited informatio
 * José Horrillo
 * Karina Díaz
 
-APPMAR is an application written in the Python programming language. The goal of this program is to perform the downloading, processing, and analysis of wind and wave data on regions of limited information availability. This application is composed of graphical user interface (GUI) that contain two main modules: the first module allows the downloading of information from WAVEWATCH III® (WW3) production hindcasts by the National Oceanic and Atmospheric Administration (NOAA); the second module uses the principles of statistical mathematics for processing and analyzing wave and wind data. This application provides useful graphical results that describe mean and extreme wave and wind climate. APPMAR generates plots of exceedance probability, joint probability distribution, wave direction, Weibull distribution, and storm frequency analysis. Currently, APPMAR only downloads and analyzes wave and wind data from WW3 hindcasts, but it is under active development and can be extended to other datasets and marine climate parameters.
+This application is composed of two main modules: the first module allows the downloading of
+information from the database (NOAA - WW3); the second module uses the principles of statistical
+mathematics for the treatment of waves and wind. The importance of this simple application is
+based on the free and agile access to meteorological and marine information for a coastal project.
+The determination of representative conditions of sea states ultimately will govern the process of
+design of coastal and oceanic infrastructure. The analysis of historical time series of local waves
+and winds allows the evaluation of average regimes or operational design, the ultimate limit states
+or extreme design, and the storms or design by persistence. In spite that the former analysis is a
+common task for coastal engineers, the codes generated are seldom shared for public use. In
+summary, for operational purposes is useful to have a freeware that can assist in the data processing
+for decision making and forcing of the mathematical models that are part of the common practice
+of coastal, oceanic and offshore engineering. This application has been tested in the Caribbean region
+of Colombia where meteorological and marine information are scarce.
 
 ## Installation
 
