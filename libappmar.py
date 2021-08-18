@@ -8,7 +8,8 @@ Germán Rivillas Ospina, PhD
 
 import logging
 import os
-from ftplib import FTP
+import urllib
+import shutil
 import pickle
 import configparser
 
