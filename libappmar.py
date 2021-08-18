@@ -22,9 +22,9 @@ from kneed import KneeLocator
 
 logging.basicConfig(level=logging.INFO)
 
-HOST = "polar.ncep.noaa.gov"
-PATH_MULTI = "/history/waves/multi_1"
-PATH_SINGLE = "/history/waves/nww3"
+URL_BASE = 'https://polar.ncep.noaa.gov/waves/hindcasts/'
+PATH_SINGLE = "nww3/{grid}.{param}.{year}{month:02}.grb"
+PATH_MULTI = "multi_1/{year}{month:02}/gribs/multi_1.{grid}.{param}.{year}{month:02}.grb2"
 
 DIR = [
     (1, 0),
@@ -84,62 +84,42 @@ def _grid_parameter_year_month_grb2(filename):
     return gid, pid, y, m
 
 
+def download_grib(gridtype, **metadata):
+    if gridtype == "single":
+        path = PATH_SINGLE.format(**metadata)
+    else:
+        path = PATH_MULTI.format(**metadata)
+    fn = "data/" + os.path.split(path)[-1]
+    with urllib.request.urlopen(URL_BASE + path) as res:
+        if not os.path.exists(fn) or os.path.getsize(fn) != res.length:
+            with open(fn, 'wb') as file:
+                shutil.copyfileobj(res, file)
+
+
 def download_data(grid_ids, par_ids, years, months):
-    dld = []
+    if "_" in grid_ids[0]:
+        multi, single = grid_ids
+    else:
+        single, multi = grid_ids
     os.makedirs("data", exist_ok=True)
-    with FTP(HOST) as ftp:
-        msg = ftp.login()
-        logging.info("Log in to %s: %s", HOST, msg)
-        msg = ftp.cwd(PATH_MULTI)
-        logging.debug("Chande directory to %s: %s", PATH_MULTI, msg)
-        for dn in ftp.nlst():
-            if not dn.isnumeric():
-                continue
-            y, m = _year_month(dn)
-            if y not in years or m not in months:
-                logging.debug("%s is not in year/month range", dn)
-                continue
-            path = f"{PATH_MULTI}/{dn}/gribs"
-            msg = ftp.cwd(path)
-            logging.debug("Chande directory to %s: %s", path, msg)
-            for fn in ftp.nlst():
-                if not fn.endswith(".grb2"):
+    for y in years:
+        for m in months:
+            for par in par_ids:
+                try:
+                    download_grib("multi", grid=multi, param=par, year=y, month=m)
+                    logging.info("Downloaded %d/%d %s, %s (Multigrid)", y, m, par, multi)
                     continue
-                gid, pid = _grid_parameter(fn)
-                if gid not in grid_ids or pid not in par_ids:
-                    logging.debug("%s is not a requested grid/parameter", fn)
-                    continue
-                if not os.path.exists(f"data/{fn}") or os.path.getsize(f"data/{fn}") != ftp.size(fn):
-                    with open(f"data/{fn}", "wb") as f:
-                        msg = ftp.retrbinary(f"RETR {fn}", f.write)
-                    logging.info("Download %s: %s", fn, msg)
-                else:
-                    logging.info("%s already exists: Skip download", fn)
-                dld.append((y, m))
-            msg = ftp.cwd(PATH_MULTI)
-            logging.debug("Chande directory to %s: %s", PATH_MULTI, msg)
-        msg = ftp.cwd(PATH_SINGLE)
-        logging.debug("Chande directory to %s: %s", PATH_SINGLE, msg)
-        for fn in ftp.nlst():
-            if not fn.endswith(".grb"):
-                continue
-            gid, pid, y, m = _grid_parameter_year_month(fn)
-            if y not in years or m not in months:
-                logging.debug("%s is not in year/month range", fn)
-                continue
-            if gid not in grid_ids or pid not in par_ids:
-                logging.debug("%s is not a requested grid/parameter", fn)
-                continue
-            if (y, m) in dld:
-                logging.debug(
-                    "%d-%02d already downloaded from multi_1: Skip download", y, m)
-                continue
-            if not os.path.exists(f"data/{fn}") or os.path.getsize(f"data/{fn}") != ftp.size(fn):
-                with open(f"data/{fn}", "wb") as f:
-                    msg = ftp.retrbinary(f"RETR {fn}", f.write)
-                logging.info("Download %s: %s", fn, msg)
-            else:
-                logging.info("%s already exists: Skip download", fn)
+                except urllib.error.HTTPError as e:
+                    if e.code != 404:
+                        raise e
+                    logging.debug("Can't find %d/%d %s, %s (Multigrid)", y, m, par, multi)
+                try:
+                    download_grib("single", grid=single, param=par, year=y, month=m)
+                    logging.info("Downloaded %d/%d %s, %s (NWW3 grid)", y, m, par, single)
+                except urllib.error.HTTPError as e:
+                    if e.code != 404:
+                        raise e
+                    logging.debug("Can't find %d/%d %s, %s (NWW3 grid)", y, m, par, single)
 
 
 def frequency_curve(par_id, months, lon, lat):
