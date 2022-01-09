@@ -11,13 +11,13 @@ import os
 import wx
 import wx.lib.agw.hyperlink as hl
 import matplotlib
-from libappmar import download_data, frequency_curve, joint_distribution, load_data, load_obj, save_obj, merge_data, weibull_data, load_max, interp_idw, get_defaults, plot_weibull, compute_clusters, plot_clusters
+from libappmar import download_data, frequency_curve, joint_distribution, load_data, load_obj, save_obj, merge_data, weibull_data, load_max, interp_idw, get_defaults, plot_weibull, compute_clusters, plot_clusters, kernel_min_max, roseplot, format_title
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wx import NavigationToolbar2Wx as NavigationToolbar
 from matplotlib.figure import Figure
+import matplotlib.ticker as mtick
 from scipy import stats
 import numpy as np
-from windrose import WindroseAxes
 import matplotlib.pyplot as plt
 import cartopy.feature as cfeature
 import cartopy.crs as ccrs
@@ -77,7 +77,8 @@ class FrameDownloadWaves(wx.Frame):
 
         # put some text
         txt_welcome = wx.StaticText(
-            pnl, label="Welcome to Wave Download Module")
+            pnl, label="Wave Download Module")
+        txt_welcome.SetFont(wx.Font(9, wx.DEFAULT, wx.NORMAL, wx.NORMAL))
         txt_grids = wx.StaticText(pnl, label="Grid IDs (comma-separated):")
         txt_years = wx.StaticText(pnl, label="Year range (comma-separated):")
 
@@ -176,7 +177,8 @@ class FrameDownloadWind(wx.Frame):
 
         # put some text
         txt_welcome = wx.StaticText(
-            pnl, label="Welcome to Wind Download Module")
+            pnl, label="Wind Download Module")
+        txt_welcome.SetFont(wx.Font(9, wx.DEFAULT, wx.NORMAL, wx.NORMAL))
         txt_grids = wx.StaticText(pnl, label="Grid IDs (comma-separated):")
         txt_years = wx.StaticText(pnl, label="Year range (comma-separated):")
 
@@ -274,7 +276,8 @@ class FrameDownload(wx.Frame):
 
         # put some text
         txt_welcome = wx.StaticText(
-            pnl, label="Welcome to Download Database Information Module")
+            pnl, label="Module – Download Database Information")
+        txt_welcome.SetFont(wx.Font(9, wx.DEFAULT, wx.NORMAL, wx.NORMAL))
 
         # put some buttons
         btn_waves = wx.Button(pnl, label="Wave Information Extraction")
@@ -328,7 +331,8 @@ class FrameAnalysisMeanClimate(wx.Frame):
 
         # put some text
         txt_welcome = wx.StaticText(
-            pnl, label="Welcome to Analysis and Processing of Climate Information Module")
+            pnl, label="Module – Analysis and Processing of Climate Information")
+        txt_welcome.SetFont(wx.Font(9, wx.DEFAULT, wx.NORMAL, wx.NORMAL))
 
         # put some buttons
         btn_height_exceedance = wx.Button(pnl, label="Exceedance Probability of Hs (m)")
@@ -337,6 +341,9 @@ class FrameAnalysisMeanClimate(wx.Frame):
         btn_roses = wx.Button(pnl, label="Wave Roses")
         btn_clusters = wx.Button(pnl, label="Representative Hs (m) - Tp (s) scenarios")
         btn_exit = wx.Button(pnl, label="Exit")
+
+        # global limits checkbox
+        self.chk_globlims = wx.CheckBox(pnl, label="Global limits for plots")
 
         # associate a handler function to the buttons
         btn_height_exceedance.Bind(wx.EVT_BUTTON, self.on_height_exceedance)
@@ -352,6 +359,7 @@ class FrameAnalysisMeanClimate(wx.Frame):
         grdsizer = wx.GridSizer(rows=3, cols=2, vgap=5, hgap=5)
         sizer.Add(txt_welcome, sizer_flags)
         sizer.Add(grdsizer, sizer_flags)
+        sizer.Add(self.chk_globlims, sizer_flags)
         grdsizer.Add(btn_height_exceedance, sizer_flags)
         grdsizer.Add(btn_period_exceedance, sizer_flags)
         grdsizer.Add(btn_height_joint, sizer_flags)
@@ -374,20 +382,19 @@ class FrameAnalysisMeanClimate(wx.Frame):
                 lon = 360 + lon
             progress_dlg = wx.ProgressDialog("Read and analyze", "Reading and analyzing wave data...")
             progress_dlg.Pulse()
-            fname = f"tmp/hs-{season}-{lon}-{lat}.tmp"
-            try:
-                x, p = load_obj(fname)
-            except FileNotFoundError:
-                data = frequency_curve("hs", ms, lon, lat)
-                save_obj(data, fname)
-                x, p = data
+            data = frequency_curve("hs", ms, lon, lat)
+            x, p = data
             progress_dlg.Update(100)
             frm_canvas = FrameCanvas(parent=None, title="Probability of Exceedance for Significant Wave Height")
             ax = frm_canvas.fig.add_subplot()
-            ax.semilogy(x, p, "o")
+            ax.scatter(x, p*100, marker=".", s=8)
+            ax.yaxis.set_major_formatter(mtick.PercentFormatter())
             ax.set_xlabel("Significant Wave Height (m)")
             ax.set_ylabel("Probability of Exceedance")
-            ax.set_title(season)
+            ax.set_title(format_title(lon, lat, str_coords=str_coords, season=season))
+            if self.chk_globlims.IsChecked():
+                arr = frequency_curve("hs", MONTHS["All"], lon, lat)[0]
+                ax.set_xlim((arr.min(), arr.max()))
             ax.grid(True)
             frm_canvas.Show()
 
@@ -404,20 +411,19 @@ class FrameAnalysisMeanClimate(wx.Frame):
                 lon = 360 + lon
             progress_dlg = wx.ProgressDialog("Read and analyze", "Reading and analyzing wave data...")
             progress_dlg.Pulse()
-            fname = f"tmp/tp-{season}-{lon}-{lat}.tmp"
-            try:
-                x, p = load_obj(fname)
-            except FileNotFoundError:
-                data = frequency_curve("tp", ms, lon, lat)
-                save_obj(data, fname)
-                x, p = data
+            data = frequency_curve("tp", ms, lon, lat)
+            x, p = data
             progress_dlg.Update(100)
             frm_canvas = FrameCanvas(parent=None, title="Probability of Exceedance for Peak Period")
             ax = frm_canvas.fig.add_subplot()
-            ax.semilogy(x, p, "o")
+            ax.scatter(x, p*100, marker=".", s=8)
+            ax.yaxis.set_major_formatter(mtick.PercentFormatter())
             ax.set_xlabel("Peak Period (s)")
             ax.set_ylabel("Probability of Exceedance")
-            ax.set_title(season)
+            ax.set_title(format_title(lon, lat, str_coords=str_coords, season=season))
+            if self.chk_globlims.IsChecked():
+                arr = frequency_curve("tp", MONTHS["All"], lon, lat)[0]
+                ax.set_xlim((arr.min(), arr.max()))
             ax.grid(True)
             frm_canvas.Show()
 
@@ -433,39 +439,35 @@ class FrameAnalysisMeanClimate(wx.Frame):
                 lon = 360 + lon
             progress_dlg = wx.ProgressDialog("Read and analyze", "Reading and analyzing wave data...")
             progress_dlg.Pulse()
-            fname = f"tmp/dp-hs-{season}-{lon}-{lat}.tmp"
-            try:
-                dp_hs = load_obj(fname)
-            except FileNotFoundError:
-                dp_hs  = joint_distribution(["dp", "hs"], ms, lon, lat)
-                save_obj(dp_hs, fname)
+            dp_hs  = joint_distribution(["dp", "hs"], ms, lon, lat)
             progress_dlg.Update(100)
             frm_canvas = FrameCanvas(parent=None, title="Joint Probability of Hs - θ")
             ax = frm_canvas.fig.add_subplot()
             kernel = stats.gaussian_kde(dp_hs)
             dp, hs = dp_hs
+            if self.chk_globlims.IsChecked():
+                vmin, vmax, hsmin, hsmax = kernel_min_max(["dp", "hs"], MONTHS, lon, lat, N)
+            else:
+                vmin = None
+                vmax = None
+                hsmin = hs.min()
+                hsmax = hs.max()
             dp, hs = np.meshgrid(
-                np.linspace(dp.min(), dp.max(), N),
-                np.linspace(hs.min(), hs.max(), N//2)
+                np.linspace(0, 360, N),
+                np.linspace(hsmin, hsmax, N//2)
             )
             p = np.reshape(
                 kernel(np.vstack([dp.flatten(), hs.flatten()])),
                 (N//2, N)
             )
-            upper = matplotlib.cm.jet(np.arange(256))
-            lower = np.ones((int(256/4), 4))
-            for i in range(3):
-                lower[:, i] = np.linspace(1, upper[0, i], lower.shape[0])
-            cmap = np.vstack((lower, upper))
-            cmap = matplotlib.colors.ListedColormap(cmap, name='myColorMap', N=cmap.shape[0])
-            im = ax.imshow(p, origin="lower", extent=(0, 360, hs.min(), hs.max()), aspect="auto", cmap=cmap)
+            im = ax.imshow(p, origin="lower", extent=(0, 360, hsmin, hsmax), aspect="auto", cmap="GnBu", vmin=vmin, vmax=vmax)
             cbar = frm_canvas.fig.colorbar(im)
             cbar.ax.set_ylabel("Probability density")
             #cs = ax.contour(dp, hs, p, colors="k", levels=4, linewidths=1)
             #ax.clabel(cs, inline_spacing=0.1)
             ax.set_xlabel("Average direction at the peak period (deg)")
             ax.set_ylabel("Significant Wave Height (m)")
-            ax.set_title(season)
+            ax.set_title(format_title(lon, lat, str_coords=str_coords, season=season))
             ax.grid(True)
             frm_canvas.Show()
 
@@ -481,19 +483,21 @@ class FrameAnalysisMeanClimate(wx.Frame):
                 lon = 360 + lon
             progress_dlg = wx.ProgressDialog("Read and analyze", "Reading and analyzing wave data...")
             progress_dlg.Pulse()
-            fname = f"tmp/dp-hs-{season}-{lon}-{lat}.tmp"
-            try:
-                dp_hs = load_obj(fname)
-            except FileNotFoundError:
-                dp_hs  = joint_distribution(["dp", "hs"], ms, lon, lat)
-                save_obj(dp_hs, fname)
+            dp_hs  = joint_distribution(["dp", "hs"], ms, lon, lat)
             progress_dlg.Update(100)
             frm_canvas = FrameCanvas(parent=None, title="Wave Rose")
-            ax = frm_canvas.fig.add_subplot(projection="windrose")
+            ax = frm_canvas.fig.add_subplot(projection="polar")
             dp, hs = dp_hs
-            ax.bar(dp, hs, normed=True)
-            ax.set_title("Significant Wave Height - " + season, pad=20)
-            ax.set_legend(title="$H_s$ (m)")
+            if self.chk_globlims.IsChecked():
+                arr  = joint_distribution(["dp", "hs"], MONTHS["All"], lon, lat)[1]
+                bin_edges = np.quantile(arr, np.linspace(0, 1, 6))
+                ax.set_ylim((0, 1))
+            else:
+                bin_edges = np.histogram_bin_edges(hs, 5)
+            bin_edges[-1] = np.inf
+            roseplot(dp, hs, bin_edges, dirnames=True, xlabel="$H_s$ (m)", ax=ax)
+            ax.set_title(format_title(lon, lat, str_coords=str_coords, season=season), pad=20)
+            frm_canvas.fig.set_tight_layout(True)
             frm_canvas.Show()
 
 
@@ -509,12 +513,7 @@ class FrameAnalysisMeanClimate(wx.Frame):
                 lon = 360 + lon
             progress_dlg = wx.ProgressDialog("Read and analyze", "Reading and analyzing wave data...")
             progress_dlg.Pulse()
-            fname = f"tmp/hs-tp-{season}-{lon}-{lat}.tmp"
-            try:
-                hs_tp = load_obj(fname)
-            except FileNotFoundError:
-                hs_tp  = joint_distribution(["hs", "tp"], ms, lon, lat)
-                save_obj(hs_tp, fname)
+            hs_tp  = joint_distribution(["hs", "tp"], ms, lon, lat)
             progress_dlg.Update(100)
             frm_canvas = FrameCanvas(parent=None, title="Representative Hs - Tp scenarios")
             ax = frm_canvas.fig.add_subplot()
@@ -522,6 +521,8 @@ class FrameAnalysisMeanClimate(wx.Frame):
             pairs = np.column_stack((hs, tp))
             centers, labels = compute_clusters(pairs)
             plot_clusters(pairs, centers, labels, ax)
+            ax.grid(True)
+            ax.set_title(format_title(lon, lat, str_coords=str_coords, season=season))
             frm_canvas.Show()
             scenarios = " ; ".join(f"{h:.2f},{t:.2f}" for h, t in centers)
             dlg = wx.TextEntryDialog(None,"Hs1,Tp1 ; Hs2,Tp2 ; ... ; HsN,TpN", "Representative Hs-Tp scenarios", scenarios)
@@ -547,7 +548,8 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
 
         # put some text
         txt_welcome = wx.StaticText(
-            pnl, label="Welcome to Analysis and Processing of Climate Information Module")
+            pnl, label="Module – Analysis and Processing of Climate Information")
+        txt_welcome.SetFont(wx.Font(9, wx.DEFAULT, wx.NORMAL, wx.NORMAL))
 
         # put some buttons
         btn_energetic = wx.Button(pnl, label="Energetic Analysis")
@@ -589,23 +591,11 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
             lon = 360 + lon
         progress_dlg = wx.ProgressDialog("Read and analyze", "Reading and analyzing wave data...")
         progress_dlg.Pulse()
-        fname = "tmp/dp-hs-tp-all-" + f"{lon}-{lat}.tmp"
-        try:
-            data = load_obj(fname)
-        except FileNotFoundError:
-            data = load_data(["dp", "hs", "tp"], ms, lon, lat)
-            save_obj(data, fname)
+        data = load_data(["dp", "hs", "tp"], ms, lon, lat)
         progress_dlg.Update(100)
-        dp = []
-        hs = []
-        tp = []
-        for k in data["dp"]:
-            dp += data["dp"][k]
-            hs += data["hs"][k]
-            tp += data["tp"][k]
-        dp = np.array(dp)
-        hs = np.array(hs)
-        tp = np.array(tp)
+        dp = data["dp"][1].values
+        hs = data["hs"][1].values
+        tp = data["tp"][1].values
         if not (len(dp) == len(hs) == len(tp)):
             raise Exception("Missing or corrupt files: Check the data directory for corrupt files and download again.")
         p97_hs = np.percentile(hs, 97)
@@ -618,15 +608,18 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
         tp = tp[notnan]
         dp = dp[notnan]
         frm_canvas = FrameCanvas(figsize=(9, 4.5), parent=None, title="Energetic Analysis")        
-        ax1 = frm_canvas.fig.add_subplot(1, 2, 1, projection="windrose")
-        ax1.bar(dp, tp, normed=True)
-        ax1.set_title("Wave period rose calculated energetically by storm", pad=20)
-        ax1.set_legend(title="$T_p$ (s)")
-        ax2 = frm_canvas.fig.add_subplot(1, 2, 2, projection="windrose")
+        ax1 = frm_canvas.fig.add_subplot(1, 2, 1, projection="polar")
+        bin_edges1 = np.histogram_bin_edges(tp, 5)
+        bin_edges1[-1] = np.inf
+        roseplot(dp, tp, bin_edges1, dirnames=True, xlabel="$T_p$ (s)", ax=ax1)
+        ax1.set_title("Wave period rose for storm events\n" + format_title(lon, lat, str_coords=str_coords), pad=20)
+        ax2 = frm_canvas.fig.add_subplot(1, 2, 2, projection="polar")
         en = hs/p97_hs
-        ax2.bar(dp, en, normed=True)
-        ax2.set_title("Significant wave height rose calculated energetically by storm", pad=20)
-        ax2.set_legend(title="$E$ (-)")
+        bin_edges2 = np.histogram_bin_edges(en, 5)
+        bin_edges2[-1] = np.inf
+        roseplot(dp, en, bin_edges2, dirnames=True, xlabel="$E$ (-)", ax=ax2)
+        ax2.set_title("Normalized energy rose for storm events\n" + format_title(lon, lat, str_coords=str_coords), pad=20)
+        frm_canvas.fig.set_tight_layout(True)
         frm_canvas.Show()
         
 
@@ -641,25 +634,17 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
             lon = 360 + lon
         progress_dlg = wx.ProgressDialog("Read and analyze", "Reading and analyzing wave data...")
         progress_dlg.Pulse()
-        fname = "tmp/dp-hs-tp-all-" + f"{lon}-{lat}.tmp"
-        try:
-            data = load_obj(fname)
-        except FileNotFoundError:
-            data = load_data(["dp", "hs", "tp"], ms, lon, lat)
-            save_obj(data, fname)
+        data = load_data(["dp", "hs", "tp"], ms, lon, lat)
         progress_dlg.Update(100)
-        hsall = merge_data(data["hs"])
+        hsall = data["hs"].values
         p97_hs = np.percentile(hsall, 97)
         p99_hs = np.percentile(hsall, 99)
         hs = {}
-        for y, m in data["hs"]:
-            if y in hs:
-                hs[y].extend(data["hs"][(y, m)])
-            else:
-                hs[y] = data["hs"][(y, m)]
+        ys = data["hs"].index.year.unique().sort_values()
+        for y in ys:
+            hs[y] = data["hs"][data["hs"].index.year == y][1].values
         n_events_97 = []
         n_events_99 = []
-        ys = [*range(min(hs), max(hs) + 1)]
         for y in ys:
             n_events_97.append(sum(x > p97_hs for x in hs[y]))
             n_events_99.append(sum(x > p99_hs for x in hs[y]))
@@ -668,13 +653,14 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
         ax1 = frm_canvas.fig.add_subplot(2, 1, 1)
         ax1.bar(x, n_events_97, tick_label=[*map(str, ys)])
         ax1.set_title("$H_s > H_{s,97} = " + f"{p97_hs:.2f}$ m")
-        ax1.tick_params(axis="x", labelrotation=90)
+        ax1.tick_params(axis="x", labelrotation=45)
         ax1.grid(True)
         ax2 = frm_canvas.fig.add_subplot(2, 1, 2)
         ax2.bar(x, n_events_99, tick_label=[*map(str, ys)])
         ax2.set_title("$H_s > H_{s,99} = " + f"{p99_hs:.2f}$ m")
-        ax2.tick_params(axis="x", labelrotation=90)
+        ax2.tick_params(axis="x", labelrotation=45)
         ax2.grid(True)
+        frm_canvas.fig.set_tight_layout(True)
         frm_canvas.Show()
 
     def on_storms_monthly(self, event):
@@ -688,22 +674,15 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
             lon = 360 + lon
         progress_dlg = wx.ProgressDialog("Read and analyze", "Reading and analyzing wave data...")
         progress_dlg.Pulse()
-        fname = "tmp/dp-hs-tp-all-" + f"{lon}-{lat}.tmp"
-        try:
-            data = load_obj(fname)
-        except FileNotFoundError:
-            data = load_data(["dp", "hs", "tp"], ms, lon, lat)
-            save_obj(data, fname)
+        data = load_data(["dp", "hs", "tp"], ms, lon, lat)
         progress_dlg.Update(100)
-        hsall = merge_data(data["hs"])
+        hsall = data["hs"].values
         p97_hs = np.percentile(hsall, 97)
         p99_hs = np.percentile(hsall, 99)
         hs = {}
-        for y, m in data["hs"]:
-            if m in hs:
-                hs[m].extend(data["hs"][(y, m)])
-            else:
-                hs[m] = data["hs"][(y, m)]
+        ms = data["hs"].index.month.unique().sort_values()
+        for m in ms:
+            hs[m] = data["hs"][data["hs"].index.month == m][1].values
         n_events_97 = []
         n_events_99 = []
         for m in ms:
@@ -719,6 +698,7 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
         ax2.bar(x, n_events_99, tick_label=STR_MONTHS)
         ax2.set_title("$H_s > H_{s,99} = " + f"{p99_hs:.2f}$ m")
         ax2.grid(True)
+        frm_canvas.fig.set_tight_layout(True)
         frm_canvas.Show()
 
 
@@ -733,25 +713,17 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
             lon = 360 + lon
         progress_dlg = wx.ProgressDialog("Read and analyze", "Reading and analyzing wave data...")
         progress_dlg.Pulse()
-        fname = "tmp/dp-hs-tp-all-" + f"{lon}-{lat}.tmp"
-        try:
-            data = load_obj(fname)
-        except FileNotFoundError:
-            data = load_data(["dp", "hs", "tp"], ms, lon, lat)
-            save_obj(data, fname)
+        data = load_data(["dp", "hs", "tp"], ms, lon, lat)
         progress_dlg.Update(100)
-        hsall = merge_data(data["hs"])
+        hsall = data["hs"].values
         p97_hs = np.percentile(hsall, 97)
         p99_hs = np.percentile(hsall, 99)
         hs = {}
-        for y, m in data["hs"]:
-            if y in hs:
-                hs[y].extend(data["hs"][(y, m)])
-            else:
-                hs[y] = data["hs"][(y, m)]
+        ys = data["hs"].index.year.unique().sort_values()
+        for y in ys:
+            hs[y] = data["hs"][data["hs"].index.year == y][1].values
         n_events_97 = []
         n_events_99 = []
-        ys = [*range(min(hs), max(hs) + 1)]
         for y in ys:
             n_events_97.append(sum(h/p97_hs > 1 for h in hs[y]))
             n_events_99.append(sum(h/p97_hs > p99_hs/p97_hs for h in hs[y]))
@@ -760,13 +732,14 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
         ax1 = frm_canvas.fig.add_subplot(2, 1, 1)
         ax1.bar(x, n_events_97, tick_label=[*map(str, ys)])
         ax1.set_title("$E > 1$")
-        ax1.tick_params(axis="x", labelrotation=90)
+        ax1.tick_params(axis="x", labelrotation=45)
         ax1.grid(True)
         ax2 = frm_canvas.fig.add_subplot(2, 1, 2)
         ax2.bar(x, n_events_99, tick_label=[*map(str, ys)])
         ax2.set_title(f"$E > {p99_hs/p97_hs:.2f}$")
-        ax2.tick_params(axis="x", labelrotation=90)
+        ax2.tick_params(axis="x", labelrotation=45)
         ax2.grid(True)
+        frm_canvas.fig.set_tight_layout(True)
         frm_canvas.Show()
 
     def on_energies_monthly(self, event):
@@ -780,22 +753,15 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
             lon = 360 + lon
         progress_dlg = wx.ProgressDialog("Read and analyze", "Reading and analyzing wave data...")
         progress_dlg.Pulse()
-        fname = "tmp/dp-hs-tp-all-" + f"{lon}-{lat}.tmp"
-        try:
-            data = load_obj(fname)
-        except FileNotFoundError:
-            data = load_data(["dp", "hs", "tp"], ms, lon, lat)
-            save_obj(data, fname)
+        data = load_data(["dp", "hs", "tp"], ms, lon, lat)
         progress_dlg.Update(100)
-        hsall = merge_data(data["hs"])
+        hsall = data["hs"].values
         p97_hs = np.percentile(hsall, 97)
         p99_hs = np.percentile(hsall, 99)
         hs = {}
-        for y, m in data["hs"]:
-            if m in hs:
-                hs[m].extend(data["hs"][(y, m)])
-            else:
-                hs[m] = data["hs"][(y, m)]
+        ms = data["hs"].index.month.unique().sort_values()
+        for m in ms:
+            hs[m] = data["hs"][data["hs"].index.month == m][1].values
         n_events_97 = []
         n_events_99 = []
         for m in ms:
@@ -811,6 +777,7 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
         ax2.bar(x, n_events_99, tick_label=STR_MONTHS)
         ax2.set_title(f"$E > {p99_hs/p97_hs:.2f}$")
         ax2.grid(True)
+        frm_canvas.fig.set_tight_layout(True)
         frm_canvas.Show()
 
     def on_exit(self, event):
@@ -833,7 +800,8 @@ class FrameAnalysisExtremeClimateMaps(wx.Frame):
 
         # put some text
         txt_welcome = wx.StaticText(
-            pnl, label="Welcome to Analysis and Processing of Climate Information Module")
+            pnl, label="Module – Analysis and Processing of Climate Information")
+        txt_welcome.SetFont(wx.Font(9, wx.DEFAULT, wx.NORMAL, wx.NORMAL))
 
         # put some buttons
         btn_waves = wx.Button(pnl, label="Waves")
@@ -895,7 +863,7 @@ class FrameAnalysisExtremeClimateMaps(wx.Frame):
         ax = frm_canvas.fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
         ax.set_title(f"Return period (Annual) = {self.pr} years")
         data = interp_idw(interp_idw(data))
-        im = ax.imshow(data, origin="upper", extent=extent, transform=ccrs.PlateCarree(), cmap="jet", interpolation="bilinear")
+        im = ax.imshow(data, origin="upper", extent=extent, transform=ccrs.PlateCarree(), cmap="GnBu", interpolation="bilinear")
         cbar = frm_canvas.fig.colorbar(im)
         cbar.ax.set_ylabel("Significant Wave Height (m)")
         ax.add_feature(LAND_10M)
@@ -904,7 +872,8 @@ class FrameAnalysisExtremeClimateMaps(wx.Frame):
         gl.ylabels_right = False
         gl.xformatter = LONGITUDE_FORMATTER
         gl.yformatter = LATITUDE_FORMATTER
-        gl.xlabel_style = {'rotation': 30}
+        gl.xlabel_style = {'rotation': 45}
+        frm_canvas.fig.set_tight_layout(True)
         frm_canvas.Show()
 
 
@@ -946,7 +915,7 @@ class FrameAnalysisExtremeClimateMaps(wx.Frame):
         ax = frm_canvas.fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
         ax.set_title(f"Return period (Annual) = {self.pr} years")
         data = interp_idw(interp_idw(data))
-        im = ax.imshow(data, origin="upper", extent=extent, transform=ccrs.PlateCarree(), cmap="jet", interpolation="bilinear")
+        im = ax.imshow(data, origin="upper", extent=extent, transform=ccrs.PlateCarree(), cmap="GnBu", interpolation="bilinear")
         cbar = frm_canvas.fig.colorbar(im)
         cbar.ax.set_ylabel("Wind speed (m/s)")
         ax.add_feature(LAND_10M)
@@ -955,7 +924,8 @@ class FrameAnalysisExtremeClimateMaps(wx.Frame):
         gl.ylabels_right = False
         gl.xformatter = LONGITUDE_FORMATTER
         gl.yformatter = LATITUDE_FORMATTER
-        gl.xlabel_style = {'rotation': 30}
+        gl.xlabel_style = {'rotation': 45}
+        frm_canvas.fig.set_tight_layout(True)
         frm_canvas.Show()
 
     def on_exit(self, event):
@@ -977,7 +947,8 @@ class FrameAnalysisExtremeClimate(wx.Frame):
 
         # put some text
         txt_welcome = wx.StaticText(
-            pnl, label="Welcome to Analysis and Processing of Climate Information Module")
+            pnl, label="Module – Analysis and Processing of Climate Information")
+        txt_welcome.SetFont(wx.Font(9, wx.DEFAULT, wx.NORMAL, wx.NORMAL))
 
         # put some buttons
         btn_weibull = wx.Button(pnl, label="EVA through Weibull Distribution")
@@ -1006,29 +977,22 @@ class FrameAnalysisExtremeClimate(wx.Frame):
 
     def on_weibull(self, event):
         """Extreme value analysis - Weibull Maximum distribution"""
-        season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall", "All"])
-        if season:
-            ms = MONTHS[season]
-            str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
-            str_lon, str_lat = str_coords.split(",")
-            lon = float(str_lon)
-            lat = float(str_lat)
-            if lon < 0:
-                lon = 360 + lon
-            progress_dlg = wx.ProgressDialog("Read and analyze", "Reading and analyzing wave data...")
-            progress_dlg.Pulse()
-            fname = f"tmp/hs-peaks-{season}-{lon}-{lat}.tmp"
-            try:
-                peaks_hs = load_obj(fname)
-            except FileNotFoundError:
-                peaks_hs = weibull_data("hs", ms, lon, lat)
-                save_obj(peaks_hs, fname)
-            progress_dlg.Update(100)
-            frm_canvas = FrameCanvas(parent=None, title="Weibull probability plot")
-            ax = frm_canvas.fig.add_subplot()
-            plot_weibull(peaks_hs, ax)
-            ax.set_title(season)
-            frm_canvas.Show()
+        ms = MONTHS["All"]
+        str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
+        str_lon, str_lat = str_coords.split(",")
+        lon = float(str_lon)
+        lat = float(str_lat)
+        if lon < 0:
+            lon = 360 + lon
+        progress_dlg = wx.ProgressDialog("Read and analyze", "Reading and analyzing wave data...")
+        progress_dlg.Pulse()
+        peaks_hs = weibull_data("hs", ms, lon, lat)
+        progress_dlg.Update(100)
+        frm_canvas = FrameCanvas(parent=None, title="Weibull probability plot")
+        ax = frm_canvas.fig.add_subplot()
+        ax.set_title("Weibull Probability Plot\n" + format_title(lon, lat, str_coords=str_coords))
+        plot_weibull(peaks_hs, ax)
+        frm_canvas.Show()
 
     def on_maps(self, event):
         """TO DO"""
@@ -1064,6 +1028,7 @@ class FrameAnalysis(wx.Frame):
         # put some text
         txt_welcome = wx.StaticText(
             pnl, label="Analysis and Processing of Climate Information")
+        txt_welcome.SetFont(wx.Font(9, wx.DEFAULT, wx.NORMAL, wx.NORMAL))
 
         # put some buttons
         btn_mean_climate = wx.Button(pnl, label="Mean Climate Analysis")

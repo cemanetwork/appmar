@@ -13,13 +13,18 @@ import shutil
 import pickle
 import configparser
 
+from math import tau  # tauday.com - Pi is wrong
+
 import xarray as xr
 import numpy as np
+import pandas as pd
 from osgeo import gdal
-from scipy.stats import linregress
+from scipy import stats
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from kneed import KneeLocator
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 
 logging.basicConfig(level=logging.INFO)
 
@@ -37,6 +42,12 @@ DIR = [
     (0, -1),
     (1, -1)
 ]
+
+# Constants for roseplot (from appmar2)
+NDIRS = 16
+DIRS = np.linspace(0, 15*tau/16, 16)
+RANGE = (-11.25, 371.25)
+BARWIDTH = tau/16
 
 SEASONS = ["Winter", "Summer", "Spring", "Fall"]
 
@@ -124,106 +135,33 @@ def download_data(grid_ids, par_ids, years, months):
 
 
 def frequency_curve(par_id, months, lon, lat):
-    """Returns an array parameter season mean and their cumulative probability estimate."""
-    xall = []
-    for fn in os.listdir("data"):
-        if fn.endswith(".grb"):
-            _, pid, y, m = _grid_parameter_year_month(fn)
-        elif fn.endswith(".grb2"):
-            _, pid, y, m = _grid_parameter_year_month_grb2(fn)
-        else:
-            continue
-        if pid != par_id:
-            continue
-        if m not in months:
-            continue
-        logging.info("Reading %s", fn)
-        x = xr.load_dataarray(f"data/{fn}", engine="cfgrib").sel(longitude=lon, latitude=lat, method="nearest").values
-        xall.extend(x)
-    n = len(xall)
+    df = data_load_or_extract(par_id, lon, lat)
+    df = df[df.index.month.isin(months)]
+    df = df[pd.notnull(df[1])]
+    n = len(df)
     p = np.arange(1, n + 1) / (n + 1)
-    return np.flip(np.sort(xall)), p
+    return np.flip(np.sort(df[1].values)), p
 
 
 def joint_distribution(par_ids, months, lon, lat):
-    """Returns an array parameter season mean and their cumulative probability estimate."""
-    done1 = {}
-    done2 = {}
-    for fn in os.listdir("data"):
-        if fn.endswith(".grb"):
-            _, pid, y, m = _grid_parameter_year_month(fn)
-        elif fn.endswith(".grb2"):
-            _, pid, y, m = _grid_parameter_year_month_grb2(fn)
-        else:
-            continue
-        if pid not in par_ids:
-            continue
-        if m not in months:
-            continue
-        logging.info("Reading %s", fn)
-        x = xr.load_dataarray(f"data/{fn}", engine="cfgrib").sel(longitude=lon, latitude=lat, method="nearest").values
-        if pid == par_ids[0]:
-            done1[(y, m)] = x
-        else:
-            done2[(y, m)] = x
-    xall = [[], []]
-    for k in done1:
-        xall[0].extend(done1[k])
-        xall[1].extend(done2[k])
-    if len(xall[0]) != len(xall[1]):
-        raise Exception("Missing or corrupt files: Check the data directory for corrupt files and download again.")
-    xall = np.array(xall)
-    return xall[:, ~np.isnan(xall.sum(axis=0))]
+    df0 = data_load_or_extract(par_ids[0], lon, lat)
+    df1 = data_load_or_extract(par_ids[1], lon, lat)
+    df = pd.merge(df0, df1, left_index=True, right_index=True)
+    df = df[df.index.month.isin(months)]
+    values = np.vstack([df["1_x"].values, df["1_y"].values])
+    return values[:, ~np.isnan(values.sum(axis=0))]
 
 
 def load_data(par_ids, months, lon, lat):
-    """TO DO"""
-    done = {
-        "dp": {},
-        "hs": {},
-        "tp": {}
-    }
-    for fn in os.listdir("data"):
-        if fn.endswith(".grb"):
-            _, pid, y, m = _grid_parameter_year_month(fn)
-        elif fn.endswith(".grb2"):
-            _, pid, y, m = _grid_parameter_year_month_grb2(fn)
-        else:
-            continue
-        if pid not in par_ids:
-            continue
-        if m not in months:
-            continue
-        logging.info("Reading %s", fn)
-        x = xr.load_dataarray(f"data/{fn}", engine="cfgrib").sel(longitude=lon, latitude=lat, method="nearest").values
-        done[pid][(y, m)] = [*x]
-    return done
+    # Variable months is redundant since the whole year is passed
+    data = {pid: data_load_or_extract(pid, lon, lat) for pid in par_ids}
+    return data
 
 
 def weibull_data(par_id, months, lon, lat):
     """Returns an array parameter season mean and their cumulative probability estimate."""
-    done = {}
-    for fn in os.listdir("data"):
-        if fn.endswith(".grb"):
-            _, pid, y, m = _grid_parameter_year_month(fn)
-        elif fn.endswith(".grb2"):
-            _, pid, y, m = _grid_parameter_year_month_grb2(fn)
-        else:
-            continue
-        if pid != par_id:
-            continue
-        if m not in months:
-            continue
-        logging.info("Reading %s", fn)
-        x = xr.load_dataarray(f"data/{fn}", engine="cfgrib").sel(longitude=lon, latitude=lat, method="nearest").values
-        if y in done:
-            done[y].append(x.max())
-        else:
-            done[y] = [x.max()]
-    xall = []
-    for i, y in enumerate(done):
-        xall.append(max(done[y]))
-    return np.array(xall)
+    df = data_load_or_extract(par_id, lon, lat)
+    return df.groupby(by=lambda ts: ts.year).max()[1].values
 
 
 def gen_dataset_from_raster(fname, lon, lat, time):
@@ -367,7 +305,7 @@ def fit_weibull3(x, tol=1e-4, delta=1e-5, verbose=False):
         loc = xmax * n + delta
         xi = -np.log(loc - x)
         r0 = r1
-        slope, intercept, r1, *_ = linregress(xi, eta)
+        slope, intercept, r1, *_ = stats.linregress(xi, eta)
         e = r1**2 - r0**2
         if verbose:
             print(n, loc)
@@ -417,3 +355,114 @@ def plot_clusters(pairs, centers, labels, ax):
     ax.scatter(centers[:, 0], centers[:, 1], c="white", edgecolor="k")
     ax.set_xlabel("Significant wave height (m)")
     ax.set_ylabel("Peak period (s)")
+
+
+def data_extract(lon, lat):
+    files = {pid: open(f"tmp/data-{pid}-{lon}-{lat}.csv", 'x') for pid in ["hs", "tp", "dp"]}
+    for fn in os.listdir("data"):
+        if fn.endswith(".grb"):
+            _, pid, y, m = _grid_parameter_year_month(fn)
+        elif fn.endswith(".grb2"):
+            _, pid, y, m = _grid_parameter_year_month_grb2(fn)
+        else:
+            continue
+        if pid in files:
+            logging.info("Reading %s", fn)
+            da = xr.load_dataarray(f"data/{fn}", engine="cfgrib").sel(longitude=lon, latitude=lat, method="nearest")
+            df = da.to_dataframe()
+            if df.index.name != "time":
+                df.time += df.index
+                df.set_index('time', inplace=True)
+            df[df.columns[-1]][1:].to_csv(files[pid], header=False, line_terminator='\n')
+    for pid in files:
+        files[pid].close()
+
+
+def data_load_or_extract(pid, lon, lat):
+    fn = f"tmp/data-{pid}-{lon}-{lat}.csv"
+    try:
+        data_extract(lon, lat)
+    except FileExistsError:
+        pass
+    df = pd.read_csv(
+        fn,
+        header=None,
+        index_col=0,
+        parse_dates=True
+    )
+    return df
+
+
+def kernel_min_max(par_ids, monthsdict, lon, lat, n):
+    hsall = joint_distribution(["dp", "hs"], monthsdict["All"], lon, lat)[1]
+    hsmin = hsall.min()
+    hsmax = hsall.max()
+    hsall = None
+    pmin = []
+    pmax = []
+    for s in ["Winter", "Summer", "Spring", "Fall"]:
+        dp_hs = joint_distribution(["dp", "hs"], monthsdict[s], lon, lat)
+        kernel = stats.gaussian_kde(dp_hs)
+        dp, hs = dp_hs
+        dp, hs = np.meshgrid(
+                np.linspace(0, 360, n),
+                np.linspace(hsmin, hsmax, n//2)
+            )
+        pflat = kernel(np.vstack([dp.flatten(), hs.flatten()]))
+        pmin.append(pflat.min())
+        pmax.append(pflat.max())
+    return min(pmin), max(pmax), hsmin, hsmax
+
+
+def roseplot(d, x, bin_edges, opening=1.0, dirnames=False, xlabel=None, cmap=None, ax=None):
+    bins = len(bin_edges) - 1
+    n = len(d)
+    hists = np.empty((bins, NDIRS))
+    lbls = []
+    for i in range(bins):
+        x1 = bin_edges[i]
+        x2 = bin_edges[i + 1]
+        dbin = d[np.logical_and(x1 <= x, x < x2)]
+        *hists[i], last = np.histogram(
+            dbin, bins=NDIRS + 1, range=RANGE)[0] / n
+        hists[i, 0] += last
+        lbls.append(f'{x1:.1f}–{x2:.1f}')
+    if ax is None:
+        ax = plt.subplot(polar=True)
+    ax.set_theta_direction(-1)
+    ax.set_theta_zero_location("N")
+    if dirnames:
+        ax.set_xticklabels(['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'])
+    if isinstance(cmap, str) or cmap is None:
+        cmap = plt.get_cmap(cmap)
+    colors = cmap(np.linspace(0, 1, bins))
+    bottoms = np.empty_like(hists)
+    bottoms[0] = 0
+    bottoms[1:] = np.cumsum(hists[:-1], 0)
+    width = opening * BARWIDTH
+    for hist, color, lbl, bottom in zip(hists, colors, lbls, bottoms):
+        ax.bar(DIRS, hist, width=width, color=color, label=lbl, bottom=bottom)
+    ax.legend(loc='center left', bbox_to_anchor=(1.2, 0.5), title=xlabel)
+    ax.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=1, decimals=0))
+    return ax
+
+
+def format_title(lon, lat, str_coords=None, season=None):
+    df = data_load_or_extract("hs", lon, lat)
+    yini = df.index.year.min()
+    yfin = df.index.year.max()
+    t = f"{yini}-{yfin}"
+    if str_coords is not None:
+        str_lon, str_lat = [x.strip() for x in str_coords.split(",")]
+        if str_lon[0] == "-":
+            str_lon = str_lon[1:] + "°W"
+        else:
+            str_lon += "°E"
+        if str_lat[0] == "-":
+            str_lat = str_lat[1:] + "°S"
+        else:
+            str_lat += "°N"
+        t += f" / {str_lat} {str_lon}"
+    if season is not None and season != "All":
+        t += f" / {season}"
+    return t
