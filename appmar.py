@@ -371,9 +371,16 @@ class FrameAnalysisMeanClimate(wx.Frame):
 
     def on_height_exceedance(self, event):
         """Plots Probability of Exceedance Estimates of mean Significant Wave Height for a season."""
-        season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall", "All"])
+        season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall", "Combined", "All"])
         if season:
-            ms = MONTHS[season]
+            seasons = []
+            if season == "Combined":
+                lbls = ["Winter", "Summer", "Spring", "Fall"]
+                for s in lbls:
+                    seasons.append(MONTHS[s])
+            else:
+                lbls = [None]
+                seasons.append(MONTHS[season])
             str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
             str_lon, str_lat = str_coords.split(",")
             lon = float(str_lon)
@@ -382,12 +389,22 @@ class FrameAnalysisMeanClimate(wx.Frame):
                 lon = 360 + lon
             progress_dlg = wx.ProgressDialog("Read and analyze", "Reading and analyzing wave data...")
             progress_dlg.Pulse()
-            data = frequency_curve("hs", ms, lon, lat)
-            x, p = data
+            xs = []
+            ps = []
+            for ms in seasons:
+                data = frequency_curve("hs", ms, lon, lat)
+                x, p = data
+                xs.append(x)
+                ps.append(p)
             progress_dlg.Update(100)
             frm_canvas = FrameCanvas(parent=None, title="Probability of Exceedance for Significant Wave Height")
             ax = frm_canvas.fig.add_subplot()
-            ax.scatter(x, p*100, marker=".", s=8)
+            for x, p, lbl in zip(xs, ps, lbls):
+                ax.scatter(x, p*100, marker=".", s=8, label=lbl)
+            if season == "Combined":
+                lgnd = ax.legend()
+                for handle in lgnd.legendHandles:
+                    handle.set_sizes([50])
             ax.yaxis.set_major_formatter(mtick.PercentFormatter())
             ax.set_xlabel("Significant Wave Height (m)")
             ax.set_ylabel("Probability of Exceedance")
@@ -400,9 +417,16 @@ class FrameAnalysisMeanClimate(wx.Frame):
 
     def on_period_exceedance(self, event):
         """Plots Probability of Exceedance Estimates of mean peak period for a season."""
-        season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall", "All"])
+        season = wx.GetSingleChoice("Select a season to analyze:", "Select season", ["Winter", "Summer", "Spring", "Fall", "Combined", "All"])
         if season:
-            ms = MONTHS[season]
+            seasons = []
+            if season == "Combined":
+                lbls = ["Winter", "Summer", "Spring", "Fall"]
+                for s in lbls:
+                    seasons.append(MONTHS[s])
+            else:
+                lbls = [None]
+                seasons.append(MONTHS[season])
             str_coords = wx.GetTextFromUser("Coordinates (lon, lat):", default_value=DEFAULT_COORD)
             str_lon, str_lat = str_coords.split(",")
             lon = float(str_lon)
@@ -411,12 +435,22 @@ class FrameAnalysisMeanClimate(wx.Frame):
                 lon = 360 + lon
             progress_dlg = wx.ProgressDialog("Read and analyze", "Reading and analyzing wave data...")
             progress_dlg.Pulse()
-            data = frequency_curve("tp", ms, lon, lat)
-            x, p = data
+            xs = []
+            ps = []
+            for ms in seasons:
+                data = frequency_curve("tp", ms, lon, lat)
+                x, p = data
+                xs.append(x)
+                ps.append(p)
             progress_dlg.Update(100)
             frm_canvas = FrameCanvas(parent=None, title="Probability of Exceedance for Peak Period")
             ax = frm_canvas.fig.add_subplot()
-            ax.scatter(x, p*100, marker=".", s=8)
+            for x, p, lbl in zip(xs, ps, lbls):
+                ax.scatter(x, p*100, marker=".", s=8, label=lbl)
+            if season == "Combined":
+                lgnd = ax.legend()
+                for handle in lgnd.legendHandles:
+                    handle.set_sizes([50])
             ax.yaxis.set_major_formatter(mtick.PercentFormatter())
             ax.set_xlabel("Peak Period (s)")
             ax.set_ylabel("Probability of Exceedance")
@@ -650,16 +684,13 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
             n_events_99.append(sum(x > p99_hs for x in hs[y]))
         frm_canvas = FrameCanvas(parent=None, title="Mean and maximum annual number of storms")
         x = np.arange(len(ys))
-        ax1 = frm_canvas.fig.add_subplot(2, 1, 1)
-        ax1.bar(x, n_events_97, tick_label=[*map(str, ys)])
-        ax1.set_title("$H_s > H_{s,97} = " + f"{p97_hs:.2f}$ m")
-        ax1.tick_params(axis="x", labelrotation=45)
-        ax1.grid(True)
-        ax2 = frm_canvas.fig.add_subplot(2, 1, 2)
-        ax2.bar(x, n_events_99, tick_label=[*map(str, ys)])
-        ax2.set_title("$H_s > H_{s,99} = " + f"{p99_hs:.2f}$ m")
-        ax2.tick_params(axis="x", labelrotation=45)
-        ax2.grid(True)
+        ax = frm_canvas.fig.add_subplot()
+        ax.bar(x, n_events_97, bottom=n_events_99, tick_label=[*map(str, ys)],
+            label=f"$H_s$ > P97 ({p97_hs:.2f} m)")
+        ax.bar(x, n_events_99, label=f"$H_s$ > P99 ({p99_hs:.2f} m)")
+        ax.legend()
+        ax.tick_params(axis="x", labelrotation=45)
+        ax.grid(True)
         frm_canvas.fig.set_tight_layout(True)
         frm_canvas.Show()
 
@@ -690,14 +721,12 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
             n_events_99.append(sum(x > p99_hs for x in hs[m]))
         frm_canvas = FrameCanvas(parent=None, title="Monthly mean and maximum number of storms")
         x = np.arange(12)
-        ax1 = frm_canvas.fig.add_subplot(2, 1, 1)
-        ax1.bar(x, n_events_97, tick_label=STR_MONTHS)
-        ax1.grid(True)
-        ax1.set_title("$H_s > H_{s,97} = " + f"{p97_hs:.2f}$ m")
-        ax2 = frm_canvas.fig.add_subplot(2, 1, 2)
-        ax2.bar(x, n_events_99, tick_label=STR_MONTHS)
-        ax2.set_title("$H_s > H_{s,99} = " + f"{p99_hs:.2f}$ m")
-        ax2.grid(True)
+        ax = frm_canvas.fig.add_subplot()
+        ax.bar(x, n_events_97, bottom=n_events_99, tick_label=STR_MONTHS,
+            label=f"$H_s$ > P97 ({p97_hs:.2f} m)")
+        ax.bar(x, n_events_99, label=f"$H_s$ > P99 ({p99_hs:.2f} m)")
+        ax.legend()
+        ax.grid(True)
         frm_canvas.fig.set_tight_layout(True)
         frm_canvas.Show()
 
@@ -729,16 +758,12 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
             n_events_99.append(sum(h/p97_hs > p99_hs/p97_hs for h in hs[y]))
         frm_canvas = FrameCanvas(parent=None, title="Mean and maximum annual number of storms with normalized energy")
         x = np.arange(len(ys))
-        ax1 = frm_canvas.fig.add_subplot(2, 1, 1)
-        ax1.bar(x, n_events_97, tick_label=[*map(str, ys)])
-        ax1.set_title("$E > 1$")
-        ax1.tick_params(axis="x", labelrotation=45)
-        ax1.grid(True)
-        ax2 = frm_canvas.fig.add_subplot(2, 1, 2)
-        ax2.bar(x, n_events_99, tick_label=[*map(str, ys)])
-        ax2.set_title(f"$E > {p99_hs/p97_hs:.2f}$")
-        ax2.tick_params(axis="x", labelrotation=45)
-        ax2.grid(True)
+        ax = frm_canvas.fig.add_subplot()
+        ax.bar(x, n_events_97, bottom=n_events_99, tick_label=[*map(str, ys)], label="$E > 1$")
+        ax.bar(x, n_events_99, label=f"$E > {p99_hs/p97_hs:.2f}$")
+        ax.legend()
+        ax.tick_params(axis="x", labelrotation=45)
+        ax.grid(True)
         frm_canvas.fig.set_tight_layout(True)
         frm_canvas.Show()
 
@@ -769,14 +794,11 @@ class FrameAnalysisExtremeClimateStorm(wx.Frame):
             n_events_99.append(sum(h/p97_hs > p99_hs/p97_hs for h in hs[m]))
         frm_canvas = FrameCanvas(parent=None, title="Monthly mean and maximum number of storms with normalized energy")
         x = np.arange(12)
-        ax1 = frm_canvas.fig.add_subplot(2, 1, 1)
-        ax1.bar(x, n_events_97, tick_label=STR_MONTHS)
-        ax1.grid(True)
-        ax1.set_title("$E > 1$")
-        ax2 = frm_canvas.fig.add_subplot(2, 1, 2)
-        ax2.bar(x, n_events_99, tick_label=STR_MONTHS)
-        ax2.set_title(f"$E > {p99_hs/p97_hs:.2f}$")
-        ax2.grid(True)
+        ax = frm_canvas.fig.add_subplot()
+        ax.bar(x, n_events_97, bottom=n_events_99, tick_label=STR_MONTHS, label="$E > 1$")
+        ax.bar(x, n_events_99, label=f"$E > {p99_hs/p97_hs:.2f}$")
+        ax.legend()
+        ax.grid(True)
         frm_canvas.fig.set_tight_layout(True)
         frm_canvas.Show()
 
