@@ -1,31 +1,24 @@
+[![DOI:10.1016/j.cageo.2022.105098](https://zenodo.org/badge/DOI/10.1016/j.cageo.2022.105098.svg)](https://doi.org/10.1016/j.cageo.2022.105098)
+
+
 # APPMAR 1.0
 
 *If you prefer to extract raw data series for your own analyses, try [APPMAR 2](https://github.com/cemanetwork/appmar2) (WIP).*
 
-A toolbox for management of meteorological and marine data on limited information regions.
+A Python application for downloading and analyzing of WAVEWATCH III® wave and wind data.
 
-* German Rivillas-Ospina
-* Diego Casas
-* Mauro Maza Chamorro
-* Marianella Bolivar
-* Gabriel Ruiz
-* Roberto Guerrero
-* José Horrillo
-* Karina Díaz
+German Rivillas-Ospina, Diego Casas, Mauro Antonio Maza-Chamorro, Marianella Bolívar, Gabriel Ruiz, Roberto Guerrero,
+José M. Horrillo-Caraballo, Milton Guerrero, Karina Díaz, Roberto del Rio, Erick Campos
 
-This application is composed of two main modules: the first module allows the downloading of
-information from the database (NOAA - WW3); the second module uses the principles of statistical
-mathematics for the treatment of waves and wind. The importance of this simple application is
-based on the free and agile access to meteorological and marine information for a coastal project.
-The determination of representative conditions of sea states ultimately will govern the process of
-design of coastal and oceanic infrastructure. The analysis of historical time series of local waves
-and winds allows the evaluation of average regimes or operational design, the ultimate limit states
-or extreme design, and the storms or design by persistence. In spite that the former analysis is a
-common task for coastal engineers, the codes generated are seldom shared for public use. In
-summary, for operational purposes is useful to have a freeware that can assist in the data processing
-for decision making and forcing of the mathematical models that are part of the common practice
-of coastal, oceanic and offshore engineering. This application has been tested in the Caribbean region
-of Colombia where meteorological and marine information are scarce.
+Highlights:
+
+* Free and open-source Python application for wave and wind climate analysis.
+* Downloads data from WAVEWATCH III hindcast.
+* Performs mean and extreme climate analysis.
+* Provides a GUI to improve interaction with the user.
+* Especially useful on regions of limited data availability.
+
+APPMAR 1.0 is an application written in the Python programming language that downloads, processes, and analyzes wind and wave data. This application is composed of a graphical user interface (GUI) that contains two main modules: the first module downloads data from WAVEWATCH III® (WW3) production hindcasts by the National Oceanic and Atmospheric Administration (NOAA); the second module applies statistical mathematics for processing and analyzing wave and wind data. This application provides useful graphical results that describe mean and extreme wave and wind climate. APPMAR generates plots of exceedance probability, joint probability distribution, wave direction, Weibull distribution, and storm frequency analysis. Currently, APPMAR only downloads and analyzes wave and wind data from WW3 hindcasts, but it is under development to other datasets and marine climate parameters (see [APPMAR 2](https://github.com/cemanetwork/appmar2)). This application has been tested in the Magdalena River mouth, Colombia, and Cancún, México, where observational wave and wind data are scarce.
 
 ## Installation
 
