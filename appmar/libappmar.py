@@ -259,9 +259,9 @@ def interp_idw(arr):
     return arr
 
 
-def parse_config():
+def parse_config(path):
     config = configparser.ConfigParser()
-    config.read(CONF_FILE)
+    config.read(path)
     months = {"All": [*range(1, 13)]}
     for season in SEASONS:
         months[season] = [int(x) for x in config["seasons"][season].split(",")]
@@ -270,21 +270,25 @@ def parse_config():
     return months, point, box
 
 
-def get_defaults():
-    if os.path.exists(CONF_FILE):
-        months, point, box = parse_config()
+def get_defaults(usrpath, tplpath):
+    if os.path.exists(usrpath):
+        try:
+            months, point, box = parse_config(usrpath)
+        except:
+            # Caribbean seasons by default
+            months = {
+                "Winter": [12, 1, 2],
+                "Summer": [6, 7, 8],
+                "Spring": [3, 4, 5],
+                "Fall": [9, 10, 11],
+                "All": [*range(1, 13)]
+            }
+            # Magdalena River Mouth by default
+            point = "-74.85,11.13"
+            box = "-75.3,-74.1,10,11.5"
     else:
-        # Caribbean seasons by default
-        months = {
-            "Winter": [12, 1, 2],
-            "Summer": [6, 7, 8],
-            "Spring": [3, 4, 5],
-            "Fall": [9, 10, 11],
-            "All": [*range(1, 13)]
-        }
-        # Magdalena River Mouth by default
-        point = "-74.85,11.13"
-        box = "-75.3,-74.1,10,11.5"
+        shutil.copyfile(tplpath, usrpath)
+        months, point, box = parse_config(usrpath)
     return months, point, box
 
 

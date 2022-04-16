@@ -11,7 +11,7 @@ import os
 import wx
 import wx.lib.agw.hyperlink as hl
 import matplotlib
-from libappmar import download_data, frequency_curve, joint_distribution, load_data, load_obj, save_obj, merge_data, weibull_data, load_max, interp_idw, get_defaults, plot_weibull, compute_clusters, plot_clusters, kernel_min_max, roseplot, format_title
+from appmar.libappmar import download_data, frequency_curve, joint_distribution, load_data, load_obj, save_obj, merge_data, weibull_data, load_max, interp_idw, get_defaults, plot_weibull, compute_clusters, plot_clusters, kernel_min_max, roseplot, format_title
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wx import NavigationToolbar2Wx as NavigationToolbar
 from matplotlib.figure import Figure
@@ -25,7 +25,13 @@ from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import xarray as xr
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
-MONTHS, DEFAULT_COORD, BOX = get_defaults()
+APPMAR_DIR = os.path.join(os.path.expanduser('~'), 'APPMAR')
+ASSETS_PATH = os.path.dirname(__file__)
+
+MONTHS, DEFAULT_COORD, BOX = get_defaults(
+    os.path.join(APPMAR_DIR, "config.ini"),
+    os.path.join(ASSETS_PATH, "appmar-config.ini"),
+)
 
 LAND_10M = cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor="k", facecolor="grey")
 N = 181
@@ -1155,7 +1161,7 @@ class FrameAbout(wx.Frame):
         pnl = wx.Panel(self)
 
         # add CEMAN logo
-        logo = wx.StaticBitmap(pnl, wx.ID_ANY, wx.Bitmap("ceman.png", wx.BITMAP_TYPE_ANY))
+        logo = wx.StaticBitmap(pnl, wx.ID_ANY, wx.Bitmap(os.path.join(ASSETS_PATH, "ceman.png"), wx.BITMAP_TYPE_ANY))
 
         # put some text
         txt_appname = wx.StaticText(pnl, label="APPMAR 1.0 by CEMAN", style=wx.ALIGN_CENTER)
@@ -1190,7 +1196,7 @@ class FrameStart(wx.Frame):
         pnl = wx.Panel(self)
 
         # add CEMAN logo
-        logo = wx.StaticBitmap(pnl, wx.ID_ANY, wx.Bitmap("wave.png", wx.BITMAP_TYPE_ANY))
+        logo = wx.StaticBitmap(pnl, wx.ID_ANY, wx.Bitmap(os.path.join(ASSETS_PATH, "wave.png"), wx.BITMAP_TYPE_ANY))
 
         # put some text
         txt_welcome = wx.StaticText(pnl, label="Welcome to", style=wx.ALIGN_CENTER)
@@ -1230,8 +1236,10 @@ class FrameStart(wx.Frame):
         frm_about = FrameAbout(None, title="About APPMAR")
         frm_about.Show()
 
-if __name__ == "__main__":
+def main():
     APP = wx.App()
     FRM = FrameStart(None, title="APPMAR 1.0")
     FRM.Show()
+    os.makedirs(APPMAR_DIR, exist_ok=True)
+    os.chdir(APPMAR_DIR)
     APP.MainLoop()
