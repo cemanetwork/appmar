@@ -1,13 +1,13 @@
 from setuptools import find_packages, setup
 
-with open("README.md", "r") as fh:
+with open("README.md", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
     name='appmar',
-    version='1.0.0',
+    version='1.0.1',
     packages=find_packages(),
-    install_requires=["cfgrib", "gdal", "wxpython", "numpy", "matplotlib==3.2",
+    install_requires=["cfgrib", "gdal", "wxpython", "numpy", "matplotlib==3.2.*",
                       "scipy", "xarray", "pandas", "cartopy", "scikit-learn", "kneed"],
     python_requires='>=3.7',
     include_package_data=True,

@@ -1240,6 +1240,5 @@ def main():
     APP = wx.App()
     FRM = FrameStart(None, title="APPMAR 1.0")
     FRM.Show()
-    os.makedirs(APPMAR_DIR, exist_ok=True)
     os.chdir(APPMAR_DIR)
     APP.MainLoop()

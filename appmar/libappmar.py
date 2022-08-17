@@ -287,6 +287,7 @@ def get_defaults(usrpath, tplpath):
             point = "-74.85,11.13"
             box = "-75.3,-74.1,10,11.5"
     else:
+        os.makedirs(os.path.dirname(usrpath), exist_ok=True)
         shutil.copyfile(tplpath, usrpath)
         months, point, box = parse_config(usrpath)
     return months, point, box
