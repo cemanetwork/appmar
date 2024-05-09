@@ -47,7 +47,7 @@ In order to install and run APPMAR, follow these steps:
 2. Create a new conda environment for APPMAR and its dependencies:
 
 ```
-conda create -n my-new-env -c conda-forge "python>=3.7" cfgrib gdal wxpython numpy<1.20 matplotlib=3.2 scipy xarray pandas cartopy scikit-learn kneed
+conda create -n my-new-env -c conda-forge "python>=3.7" cfgrib gdal wxpython numpy==1.23.3 matplotlib=3.2 scipy xarray pandas cartopy scikit-learn kneed
 ```
 
 3. Activate the new environment:
