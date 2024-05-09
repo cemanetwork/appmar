@@ -31,7 +31,7 @@ APPMAR is written in Python 3.7, and it requires a variety of dependencies to ru
 - cfgrib
 - gdal
 - wxpython
-- numpy<1.20
+- numpy==1.23.3
 - matplotlib==3.2
 - scipy
 - xarray
