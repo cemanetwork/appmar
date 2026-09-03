@@ -7,7 +7,7 @@ setup(
     name='appmar',
     version='1.0.1',
     packages=find_packages(),
-    install_requires=["cfgrib", "gdal", "wxpython", "numpy", "matplotlib==3.2.*",
+    install_requires=["cfgrib", "gdal", "wxpython", "numpy", "matplotlib",
                       "scipy", "xarray", "pandas", "cartopy", "scikit-learn", "kneed"],
     python_requires='>=3.7',
     include_package_data=True,
